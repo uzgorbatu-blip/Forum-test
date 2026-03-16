@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etkinlik Galerisi | Forum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="../assets/js/auth.js"></script><script src="../assets/js/main.js"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#000000', secondary: '#FFFFFF', accent: '#E31E24' }, fontFamily: { sans: ['Inter', 'sans-serif'] }, } } }</script>
+</head>
+<body class="antialiased bg-gray-50">
+    <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex-shrink-0 flex items-center"><a href="../index.html" class="text-2xl font-extrabold tracking-tighter">FORUM<span class="text-accent">.</span></a></div>
+                <div class="hidden md:flex space-x-8 text-sm font-semibold uppercase tracking-wider">
+                    <a href="../index.html" class="hover:text-accent transition">Ana Sayfa</a>
+                    <a href="hakkimizda.html" class="hover:text-accent transition">Hakkımızda</a>
+                    <a href="komiteler.html" class="hover:text-accent transition">Komiteler</a>
+                    <a href="projeler.html" class="hover:text-accent transition">Projeler</a>
+                    <a href="etkinlikler.html" class="text-accent transition">Etkinlikler</a>
+                    <a href="iletisim.html" class="hover:text-accent transition">İletişim</a>
+                </div>
+                <div class="hidden md:block" id="navbar-auth-links">
+                    <div class="flex items-center space-x-4"><a href="login.html" class="text-sm font-bold uppercase tracking-widest hover:text-accent transition">Giriş</a><a href="register.html" class="bg-black text-white px-5 py-2.5 rounded-md hover:bg-accent transition text-sm font-bold uppercase tracking-widest">Kayıt</a></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="pt-40 pb-20 bg-black text-white text-center" data-aos="fade-up">
+        <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter uppercase">Etkinlik Galerisi</h1>
+        <p class="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">Forum ailesinin unutulmaz anları ve geçmiş etkinliklerin özeti.</p>
+    </section>
+
+    <section class="py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" id="events-list">
+                <!-- Point 10: Etkinlik Galerisi -->
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-black text-white py-12 text-center">
+        <a href="../index.html" class="text-2xl font-black tracking-tighter mb-4 block">FORUM<span class="text-accent">.</span></a>
+        <p class="text-gray-500 text-xs uppercase tracking-widest">&copy; 2024 Forum. Tüm Hakları Saklıdır.</p>
+    </footer>
+
+    <script>
+        function loadEvents() {
+            const events = ForumDB.getEvents();
+            const container = document.getElementById('events-list');
+            if (events.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200"><p class="text-gray-400 italic font-bold">Henüz kaydedilmiş bir etkinlik bulunmuyor.</p></div>';
+            } else {
+                container.innerHTML = events.map(e => `
+                    <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 group hover:shadow-xl transition duration-500" data-aos="fade-up">
+                        <div class="aspect-square bg-gray-200 relative overflow-hidden flex items-center justify-center font-black text-4xl text-white">FORUM EVENT</div>
+                        <div class="p-8">
+                            <span class="text-[8px] font-black uppercase tracking-[0.2em] text-accent">${new Date(e.date).toLocaleDateString()}</span>
+                            <h3 class="text-xl font-bold mt-2 mb-4 group-hover:text-accent transition uppercase tracking-tight">${e.title}</h3>
+                            <p class="text-gray-500 text-xs leading-relaxed mb-6 line-clamp-3">${e.content}</p>
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${e.location || 'Genel Katılım'}</span>
+                                <span class="px-3 py-1 bg-gray-50 text-gray-400 rounded-full text-[8px] font-black uppercase tracking-widest">${e.type}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadEvents);
+        lucide.createIcons(); AOS.init({ duration: 800, once: true });
+    </script>
+</body></html>

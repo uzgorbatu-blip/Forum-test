@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetim Paneli | Forum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="../assets/js/auth.js"></script><script src="../assets/js/main.js"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#000000', secondary: '#FFFFFF', accent: '#E31E24' }, fontFamily: { sans: ['Inter', 'sans-serif'] }, } } }</script>
+</head>
+<body class="antialiased bg-gray-50">
+    <script>const s = ForumDB.getSession(); if (!s || s.role !== 'admin') window.location.href = 'dashboard.html';</script>
+
+    <div class="min-h-screen flex">
+        <aside class="w-64 bg-black text-white hidden md:flex flex-col fixed h-full">
+            <div class="p-8"><a href="../index.html" class="text-2xl font-black tracking-tighter block">FORUM<span class="text-accent">.</span></a></div>
+            <nav class="flex-1 px-4 space-y-2">
+                <button onclick="showAdminTab('apps')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center bg-accent" data-tab="apps"><i data-lucide="file-text" class="mr-3 w-4 h-4"></i> Başvurular</button>
+                <button onclick="showAdminTab('users')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="users"><i data-lucide="users" class="mr-3 w-4 h-4"></i> Üyeler</button>
+                <button onclick="showAdminTab('committees')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="committees"><i data-lucide="layout" class="mr-3 w-4 h-4"></i> Komite Yönetimi</button>
+                <button onclick="showAdminTab('announcements')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="announcements"><i data-lucide="bell" class="mr-3 w-4 h-4"></i> Duyurular</button>
+                <button onclick="showAdminTab('projects')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="projects"><i data-lucide="rocket" class="mr-3 w-4 h-4"></i> Projeler</button>
+                <button onclick="showAdminTab('xp')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="xp"><i data-lucide="zap" class="mr-3 w-4 h-4"></i> Puan Sistemi</button>
+                <button onclick="showAdminTab('tasks')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="tasks"><i data-lucide="check-square" class="mr-3 w-4 h-4"></i> Görevler</button>
+                <button onclick="showAdminTab('trash')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="trash"><i data-lucide="trash-2" class="mr-3 w-4 h-4"></i> Çöp Kutusu</button>
+                <a href="dashboard.html" class="w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center"><i data-lucide="arrow-left" class="mr-3 w-4 h-4"></i> Panele Dön</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 md:ml-64 min-h-screen p-8">
+            <h1 id="admin-tab-title" class="text-3xl font-black uppercase tracking-tight mb-8">Yönetim Paneli</h1>
+
+            <!-- Applications -->
+            <div id="admin-apps" class="admin-tab-content space-y-6">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden" id="apps-list-admin"></div>
+            </div>
+
+            <!-- Users -->
+            <div id="admin-users" class="admin-tab-content hidden space-y-6">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden" id="users-list-admin"></div>
+            </div>
+
+            <!-- Committee Management -->
+            <div id="admin-committees" class="admin-tab-content hidden space-y-6">
+                <div class="grid md:grid-cols-2 gap-6" id="committees-grid-admin"></div>
+            </div>
+
+            <!-- Projects -->
+            <div id="admin-projects" class="admin-tab-content hidden space-y-6">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden" id="projects-list-admin"></div>
+            </div>
+
+            <!-- XP Management -->
+            <div id="admin-xp" class="admin-tab-content hidden space-y-8">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-black text-white p-8 rounded-3xl shadow-xl md:col-span-2">
+                        <h3 class="text-lg font-black mb-6 uppercase tracking-tight text-accent">XP Ayarları</h3>
+                        <div class="grid sm:grid-cols-2 gap-4" id="xp-settings-grid">
+                            <!-- Dynamic XP Settings -->
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                        <h3 class="text-lg font-black mb-6 uppercase tracking-tight">Yeni Rozet Ekle</h3>
+                        <form id="badge-form" class="space-y-4">
+                            <input id="badge-name" placeholder="Rozet Adı" class="w-full px-4 py-3 bg-gray-50 rounded-xl text-xs font-bold outline-none" required>
+                            <input id="badge-desc" placeholder="Açıklama (isteğe bağlı)" class="w-full px-4 py-3 bg-gray-50 rounded-xl text-xs font-bold outline-none">
+                            <input id="badge-xp" type="number" min="0" step="1" placeholder="Gereken XP" class="w-full px-4 py-3 bg-gray-50 rounded-xl text-xs font-bold outline-none" required>
+                            <button type="submit" class="w-full py-3 bg-black text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-accent transition">Rozeti Kaydet</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <h3 class="p-8 pb-4 text-lg font-black uppercase tracking-tight">XP Liderlik Tablosu</h3>
+                    <div id="xp-leaderboard-admin"></div>
+                </div>
+            </div>
+
+            <!-- Tasks -->
+            <div id="admin-tasks" class="admin-tab-content hidden space-y-6">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden" id="tasks-list-admin"></div>
+            </div>
+
+            <!-- Trash -->
+            <div id="admin-trash" class="admin-tab-content hidden space-y-6">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden" id="trash-list-admin"></div>
+            </div>
+
+            <!-- Announcements -->
+            <div id="admin-announcements" class="admin-tab-content hidden space-y-6">
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-black mb-6 uppercase tracking-tight">Duyuru Yayınla</h3>
+                    <form id="announcement-form" class="space-y-4">
+                        <input id="ann-title" placeholder="Duyuru Başlığı" required class="w-full px-4 py-3 border rounded-xl">
+                        <textarea id="ann-content" placeholder="Duyuru içeriği..." required class="w-full px-4 py-3 border rounded-xl" rows="3"></textarea>
+                        <button type="submit" class="bg-black text-white px-8 py-3 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent transition">Yayınla</button>
+                    </form>
+                </div>
+                <div id="ann-list-admin" class="space-y-4"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function showAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById('admin-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('bg-accent'));
+            document.querySelector(`[data-tab="${tabId}"]`)?.classList.add('bg-accent');
+            loadAdminData(tabId);
+        }
+
+        function loadAdminData(tabId) {
+            if (tabId === 'apps') {
+                const apps = ForumDB.getApplications();
+                const statusLabels = { pending: 'Beklemede', accepted: 'Kabul Edildi', rejected: 'Reddedildi' };
+                document.getElementById('apps-list-admin').innerHTML = apps.length === 0 ? '<p class="p-8 italic text-gray-500">Henüz başvuru yok.</p>' : `
+                    <table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400"><tr><th class="p-4">Üye</th><th class="p-4">Komite</th><th class="p-4">Tarih</th><th class="p-4">Durum</th><th class="p-4">İşlem</th></tr></thead>
+                    <tbody>${apps.map(app => `
+                        <tr class="border-b border-gray-50 text-sm"><td class="p-4 font-bold">${app.userName}</td><td class="p-4">${app.committeeLabel}</td><td class="p-4 text-xs">${new Date(app.submittedAt).toLocaleDateString()}</td><td class="p-4"><span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${app.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : app.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${statusLabels[app.status] || app.status}</span></td><td class="p-4">${app.status === 'pending' ? `<button onclick="updateAppStatus(${app.id}, 'accepted')" class="text-green-500 font-bold hover:underline mr-2">Onayla</button><button onclick="updateAppStatus(${app.id}, 'rejected')" class="text-red-500 font-bold hover:underline">Reddet</button>` : '-'}</td></tr>
+                    `).join('')}</tbody></table>`;
+            } else if (tabId === 'users') {
+                const users = ForumDB.getUsers();
+                document.getElementById('users-list-admin').innerHTML = `<table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400"><tr><th class="p-4">Üye</th><th class="p-4">Rol</th><th class="p-4">Komiteler</th><th class="p-4">Tarih</th></tr></thead>
+                    <tbody>${users.map(u => `<tr class="border-b border-gray-50 text-sm"><td class="p-4 font-bold">${u.fullName}<br><span class="text-[10px] font-normal text-gray-400">${u.email}</span></td><td class="p-4 text-xs font-black uppercase">${u.role}</td><td class="p-4 text-xs">${u.committees?.join(', ') || '-'}</td><td class="p-4 text-xs">${new Date(u.joinedAt).toLocaleDateString()}</td></tr>`).join('')}</tbody></table>`;
+            } else if (tabId === 'committees') {
+                const committees = { bilim: 'Bilim ve Akademik Çalışmalar', teknoloji: 'Teknoloji ve Girişimcilik', sanat: 'Sanat ve Kültür', sosyal: 'Sosyal Sorumluluk', organizasyon: 'Organizasyon ve İletişim' };
+                const users = ForumDB.getUsers();
+                const grid = document.getElementById('committees-grid-admin');
+                grid.innerHTML = Object.entries(committees).map(([id, label]) => {
+                    const head = users.find(u => u.leadOf === id);
+                    return `
+                        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                            <h3 class="font-black text-sm uppercase tracking-widest mb-4">${label}</h3>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Komite Başkanı</p>
+                                    <p class="font-bold text-lg">${head ? head.fullName : 'Atanmamış'}</p>
+                                </div>
+                                <select onchange="assignHead('${id}', this.value)" class="bg-gray-50 border-none rounded-lg px-4 py-2 text-[10px] font-bold uppercase outline-none">
+                                    <option value="">Başkan Seç...</option>
+                                    ${users.map(u => `<option value="${u.id}" ${head?.id === u.id ? 'selected' : ''}>${u.fullName}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else if (tabId === 'projects') {
+                const projects = ForumDB.getProjects();
+                const container = document.getElementById('projects-list-admin');
+                container.innerHTML = projects.length === 0 ? '<p class="p-8 italic text-gray-500">Henüz proje yok.</p>' : `
+                    <table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400"><tr><th class="p-4">Proje</th><th class="p-4">Kategori</th><th class="p-4">Üye Sayısı</th><th class="p-4">İşlem</th></tr></thead>
+                    <tbody>${projects.map(p => `
+                        <tr class="border-b border-gray-50 text-sm" id="admin-proj-${p.id}"><td class="p-4 font-bold">${p.title}</td><td class="p-4 text-xs uppercase font-black">${p.category}</td><td class="p-4">${p.members.length}</td><td class="p-4"><button onclick="deleteProjectAdmin(${p.id})" class="text-red-500 font-bold hover:underline">Sil</button></td></tr>
+                    `).join('')}</tbody></table>`;
+            } else if (tabId === 'xp') {
+                const xpConfig = ForumDB.XP_CONFIG;
+                document.getElementById('xp-settings-grid').innerHTML = Object.entries(xpConfig).map(([key, config]) => `
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] text-gray-500 font-black uppercase tracking-widest">${config.label}</p>
+                            <p class="text-sm font-bold text-white">${config.points} XP</p>
+                        </div>
+                        <button class="p-2 hover:text-accent transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                    </div>
+                `).join('');
+                
+                const leaderboard = ForumDB.getLeaderboard();
+                document.getElementById('xp-leaderboard-admin').innerHTML = `
+                    <table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400"><tr><th class="p-4">Sıra</th><th class="p-4">Üye</th><th class="p-4">Seviye</th><th class="p-4 text-right">Toplam XP</th></tr></thead>
+                    <tbody>${leaderboard.map((u, idx) => `
+                        <tr class="border-b border-gray-50 text-sm"><td class="p-4 font-black">#${idx + 1}</td><td class="p-4 font-bold">${u.fullName}</td><td class="p-4 font-black uppercase text-[10px]">Seviye ${u.level || 1}</td><td class="p-4 text-right font-black">${u.xp || 0} XP</td></tr>
+                    `).join('')}</tbody></table>`;
+                lucide.createIcons();
+            } else if (tabId === 'tasks') {
+                const tasks = ForumDB.getTasks();
+                const taskStatusLabels = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', completed: 'Tamamlandı' };
+                const container = document.getElementById('tasks-list-admin');
+                container.innerHTML = tasks.length === 0 ? '<p class="p-8 italic text-gray-500">Henüz görev yok.</p>' : `
+                    <table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400"><tr><th class="p-4">Görev</th><th class="p-4">Komite</th><th class="p-4">Durum</th><th class="p-4">İşlem</th></tr></thead>
+                    <tbody>${tasks.map(t => `
+                        <tr class="border-b border-gray-50 text-sm" id="admin-task-${t.id}"><td class="p-4 font-bold">${t.title}</td><td class="p-4 text-xs uppercase font-black">${t.committee}</td><td class="p-4 text-xs font-black uppercase">${taskStatusLabels[t.status] || t.status}</td><td class="p-4"><button onclick="deleteTaskAdmin(${t.id})" class="text-red-500 font-bold hover:underline">Sil</button></td></tr>
+                    `).join('')}</tbody></table>`;
+            } else if (tabId === 'trash') {
+                const trash = ForumDB.getTrash();
+                const container = document.getElementById('trash-list-admin');
+                container.innerHTML = trash.length === 0 ? '<p class="p-8 italic text-gray-500">Çöp kutusu boş.</p>' : `
+                    <table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400"><tr><th class="p-4">Başlık</th><th class="p-4">Tür</th><th class="p-4">Silinme Tarihi</th><th class="p-4">İşlem</th></tr></thead>
+                    <tbody>${trash.map(t => `
+                        <tr class="border-b border-gray-50 text-sm" id="trash-item-${t.id}"><td class="p-4 font-bold">${t.title}</td><td class="p-4 text-xs font-black uppercase">${t.type === 'project' ? 'Proje' : 'Görev'}</td><td class="p-4 text-xs">${new Date(t.deletedAt).toLocaleString()}</td><td class="p-4 flex space-x-4"><button onclick="restoreItem(${t.id})" class="text-green-500 font-bold hover:underline">Geri Yükle</button><button onclick="permDeleteItem(${t.id})" class="text-red-600 font-bold hover:underline">Kalıcı Sil</button></td></tr>
+                    `).join('')}</tbody></table>`;
+            } else if (tabId === 'announcements') {
+                const ann = ForumDB.getAnnouncements();
+                document.getElementById('ann-list-admin').innerHTML = ann.map(a => `<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h4 class="font-bold text-lg">${a.title}</h4><p class="text-gray-600 text-sm mt-2">${a.content}</p><div class="mt-4 text-[10px] text-gray-400 font-black uppercase tracking-widest">${new Date(a.date).toLocaleDateString()}</div></div>`).join('');
+            }
+        }
+
+        function updateAppStatus(id, status) { 
+            ForumDB.updateApplicationStatus(id, status); 
+            loadAdminData('apps'); 
+        }
+        function assignHead(committeeId, userId) {
+            if (userId && confirm('Bu kullanıcıyı komite başkanı olarak atamak istediğine emin misin?')) {
+                ForumDB.assignCommitteeHead(userId, committeeId);
+                loadAdminData('committees');
+            }
+        }
+        function deleteProjectAdmin(id) { 
+            if (confirm('Projeyi silmek istediğine emin misin?')) { 
+                ForumDB.deleteProject(id); 
+                loadAdminData('projects'); 
+            } 
+        }
+        function deleteTaskAdmin(id) { 
+            if (confirm('Görevi silmek istediğine emin misin?')) { 
+                ForumDB.deleteTask(id); 
+                loadAdminData('tasks'); 
+            } 
+        }
+        function restoreItem(id) { 
+            ForumDB.restoreFromTrash(id); 
+            loadAdminData('trash'); 
+        }
+        function permDeleteItem(id) { 
+            if (confirm('Bu öğeyi kalıcı olarak silmek istediğine emin misin? Bu işlem geri alınamaz.')) { 
+                ForumDB.permanentlyDelete(id); 
+                loadAdminData('trash'); 
+            } 
+        }
+        document.getElementById('badge-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('badge-name');
+            const descInput = document.getElementById('badge-desc');
+            const xpInput = document.getElementById('badge-xp');
+            const name = nameInput.value.trim();
+            const requiredXP = Number(xpInput.value);
+            if (!name || isNaN(requiredXP) || requiredXP < 0) {
+                alert('Lütfen geçerli bir rozet adı ve XP değeri girin.');
+                return;
+            }
+            ForumDB.createCustomBadge({
+                name,
+                description: descInput.value.trim(),
+                requiredXP
+            });
+            if (typeof ForumUI !== 'undefined') {
+                ForumUI.notify('Yeni rozet kaydedildi ve uygun kullanıcılara atandı.', 'success');
+            }
+            e.target.reset();
+        });
+        document.getElementById('announcement-form').addEventListener('submit', (e) => { 
+            e.preventDefault(); 
+            ForumDB.createAnnouncement({ title: document.getElementById('ann-title').value, content: document.getElementById('ann-content').value }); 
+            ForumUI.notify('Duyuru başarıyla yayınlandı!', 'success');
+            e.target.reset(); // Formu temizle
+            loadAdminData('announcements'); 
+        });
+
+        showAdminTab('apps');
+        lucide.createIcons();
+    </script>
+</body></html>

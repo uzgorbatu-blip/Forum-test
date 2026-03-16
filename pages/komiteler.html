@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komiteler | Forum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="../assets/js/auth.js"></script><script src="../assets/js/main.js"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#000000', secondary: '#FFFFFF', accent: '#E31E24' }, fontFamily: { sans: ['Inter', 'sans-serif'] }, } } }</script>
+</head>
+<body class="antialiased">
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex-shrink-0 flex items-center"><a href="../index.html" class="text-2xl font-extrabold tracking-tighter">FORUM<span class="text-accent">.</span></a></div>
+                <div class="hidden md:flex space-x-8 text-sm font-semibold uppercase tracking-wider">
+                    <a href="../index.html" class="hover:text-accent transition">Ana Sayfa</a>
+                    <a href="hakkimizda.html" class="hover:text-accent transition">Hakkımızda</a>
+                    <a href="komiteler.html" class="text-accent transition">Komiteler</a>
+                    <a href="projeler.html" class="hover:text-accent transition">Projeler</a>
+                    <a href="etkinlikler.html" class="hover:text-accent transition">Etkinlikler</a>
+                    <a href="iletisim.html" class="hover:text-accent transition">İletişim</a>
+                </div>
+                <div class="hidden md:block" id="navbar-auth-links">
+                    <div class="flex items-center space-x-4"><a href="login.html" class="text-sm font-bold uppercase tracking-widest hover:text-accent transition">Giriş</a><a href="register.html" class="bg-black text-white px-5 py-2.5 rounded-md hover:bg-accent transition text-sm font-bold uppercase tracking-widest">Kayıt</a></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="pt-40 pb-20 bg-black text-white text-center" data-aos="fade-up">
+        <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter uppercase">Komitelerimiz</h1>
+        <p class="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">Forum'un 5 ana gücüyle her alanda üretim ve gelişim odaklı hareket ediyoruz.</p>
+    </section>
+
+    <section class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Committees -->
+                <div class="bg-white border p-8 rounded-3xl shadow-sm hover:border-accent transition group" data-aos="fade-up">
+                    <div class="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center mb-6 group-hover:bg-accent transition"><i data-lucide="microscope" class="w-8 h-8"></i></div>
+                    <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">Bilim ve Akademik Çalışmalar</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-6">Akademik araştırma kültürünü yaygınlaştırmak ve öğrencilerin akademik dünyada yer edinmelerini sağlamak amacıyla çalışır.</p>
+                    <a href="komite-bilim.html" class="text-xs font-black uppercase tracking-widest flex items-center hover:text-accent transition">Detaylar <i data-lucide="arrow-right" class="ml-2 w-4 h-4"></i></a>
+                </div>
+                <div class="bg-white border p-8 rounded-3xl shadow-sm hover:border-accent transition group" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center mb-6 group-hover:bg-accent transition"><i data-lucide="cpu" class="w-8 h-8"></i></div>
+                    <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">Teknoloji ve Girişimcilik</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-6">Yazılım, robotik, yapay zekâ ve startup fikirleri ile geleceği bugünden inşa etmeyi hedefler.</p>
+                    <a href="komite-teknoloji.html" class="text-xs font-black uppercase tracking-widest flex items-center hover:text-accent transition">Detaylar <i data-lucide="arrow-right" class="ml-2 w-4 h-4"></i></a>
+                </div>
+                <div class="bg-white border p-8 rounded-3xl shadow-sm hover:border-accent transition group" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center mb-6 group-hover:bg-accent transition"><i data-lucide="palette" class="w-8 h-8"></i></div>
+                    <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">Sanat ve Kültür</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-6">Tiyatro, müzik, edebiyat ve sinema gibi alanlarda öğrencilerin sanatsal potansiyelini ortaya çıkarır.</p>
+                    <a href="komite-sanat.html" class="text-xs font-black uppercase tracking-widest flex items-center hover:text-accent transition">Detaylar <i data-lucide="arrow-right" class="ml-2 w-4 h-4"></i></a>
+                </div>
+                <div class="bg-white border p-8 rounded-3xl shadow-sm hover:border-accent transition group" data-aos="fade-up" data-aos-delay="300">
+                    <div class="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center mb-6 group-hover:bg-accent transition"><i data-lucide="heart" class="w-8 h-8"></i></div>
+                    <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">Sosyal Sorumluluk</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-6">Gönüllülük çalışmaları ve toplumsal projeler ile dünyaya değer katmayı amaçlar.</p>
+                    <a href="komite-sosyal.html" class="text-xs font-black uppercase tracking-widest flex items-center hover:text-accent transition">Detaylar <i data-lucide="arrow-right" class="ml-2 w-4 h-4"></i></a>
+                </div>
+                <div class="bg-white border p-8 rounded-3xl shadow-sm hover:border-accent transition group md:col-start-2" data-aos="fade-up" data-aos-delay="400">
+                    <div class="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center mb-6 group-hover:bg-accent transition"><i data-lucide="megaphone" class="w-8 h-8"></i></div>
+                    <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">Organizasyon ve İletişim</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-6">Etkinlik planlama, dış ilişkiler ve Forum ağının büyümesi için stratejiler geliştirir.</p>
+                    <a href="komite-organizasyon.html" class="text-xs font-black uppercase tracking-widest flex items-center hover:text-accent transition">Detaylar <i data-lucide="arrow-right" class="ml-2 w-4 h-4"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-24 bg-accent text-white text-center relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10" data-aos="zoom-in">
+            <h2 class="text-4xl md:text-5xl font-black mb-8 uppercase tracking-tighter">Sen de Parçası Ol!</h2>
+            <p class="text-white/80 text-lg mb-10 max-w-2xl mx-auto">Potansiyelini keşfetmek ve projelerini hayata geçirmek için hemen başvur.</p>
+            <a href="basvuru.html" class="bg-white text-accent px-12 py-5 rounded-full font-black uppercase tracking-widest text-xl hover:bg-black hover:text-white transition shadow-2xl">Hemen Başvur</a>
+        </div>
+    </section>
+
+    <footer class="bg-black text-white py-12 text-center">
+        <a href="../index.html" class="text-2xl font-black tracking-tighter mb-4 block">FORUM<span class="text-accent">.</span></a>
+        <p class="text-gray-500 text-xs uppercase tracking-widest">&copy; 2024 Forum. Tüm Hakları Saklıdır.</p>
+    </footer>
+    <script>lucide.createIcons(); AOS.init({ duration: 800, once: true });</script>
+</body></html>

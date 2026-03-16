@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol | Forum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="../assets/js/auth.js"></script><script src="../assets/js/main.js"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#000000', secondary: '#FFFFFF', accent: '#E31E24' }, fontFamily: { sans: ['Inter', 'sans-serif'] }, } } }</script>
+</head>
+<body class="antialiased bg-gray-50">
+    <script>if (ForumDB.getSession()) window.location.href = 'dashboard.html';</script>
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-xl border border-gray-100" data-aos="fade-up">
+            <div class="text-center">
+                <a href="../index.html" class="text-3xl font-black tracking-tighter mb-4 inline-block">FORUM<span class="text-accent">.</span></a>
+                <h2 class="mt-6 text-3xl font-black text-gray-900 uppercase tracking-tight">Kayıt Ol</h2>
+            </div>
+            <form id="register-form" class="mt-8 space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Ad Soyad</label>
+                        <input id="fullName" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="Ad Soyad">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Sınıf</label>
+                        <select id="grade" class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm">
+                            <option>Hazırlık</option><option>9. Sınıf</option><option>10. Sınıf</option><option>11. Sınıf</option><option>12. Sınıf</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">E-posta</label>
+                    <input id="email" type="email" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="e-posta@örnek.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Şifre</label>
+                    <input id="password" type="password" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">İlgi Alanları</label>
+                    <input id="interests" class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="Örn: Yazılım, Sanat">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Kısa Biyografi</label>
+                    <textarea id="intro" class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" rows="3" placeholder="Kendini kısaca tanıt..."></textarea>
+                </div>
+                <button type="submit" class="w-full flex justify-center py-4 px-4 border border-transparent text-sm font-black rounded-lg text-white bg-black hover:bg-accent transition uppercase tracking-widest shadow-xl">Kayıt Ol</button>
+                <div class="text-center"><p class="text-sm text-gray-600">Hesabın var mı? <a href="login.html" class="font-bold text-accent hover:underline">Giriş Yap</a></p></div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.getElementById('register-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const data = {
+                fullName: document.getElementById('fullName').value,
+                grade: document.getElementById('grade').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                interests: document.getElementById('interests').value,
+                intro: document.getElementById('intro').value
+            };
+            ForumDB.registerUser(data);
+            ForumUI.notify('Kaydınız başarıyla oluşturuldu! Hoş geldiniz.', 'success');
+            setTimeout(() => window.location.href = 'dashboard.html', 1500);
+        });
+    </script>
+</body></html>

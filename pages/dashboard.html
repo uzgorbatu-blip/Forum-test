@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel | Forum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="../assets/js/auth.js"></script><script src="../assets/js/main.js"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#000000', secondary: '#FFFFFF', accent: '#E31E24' }, fontFamily: { sans: ['Inter', 'sans-serif'] }, } } }</script>
+</head>
+<body class="antialiased bg-gray-50">
+    <script>if (!ForumDB.getSession()) window.location.href = 'login.html';</script>
+
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-black text-white hidden md:flex flex-col fixed h-full">
+            <div class="p-8"><a href="../index.html" class="text-2xl font-black tracking-tighter block">FORUM<span class="text-accent">.</span></a></div>
+            <nav class="flex-1 px-4 space-y-2 overflow-y-auto" id="sidebar-nav-list">
+                <button onclick="showTab('profil')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center bg-accent" data-tab="profil"><i data-lucide="user" class="mr-3 w-4 h-4"></i> Profil</button>
+                <button onclick="showTab('sosyal')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="sosyal"><i data-lucide="share-2" class="mr-3 w-4 h-4"></i> Sosyal</button>
+                <button onclick="showTab('projeler')" id="nav-projeler" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="projeler"><i data-lucide="rocket" class="mr-3 w-4 h-4"></i> Projeler</button>
+                <button onclick="showTab('gorevler')" id="nav-gorevler" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="gorevler"><i data-lucide="check-square" class="mr-3 w-4 h-4"></i> Görevler</button>
+                <button onclick="showTab('basvuru')" id="nav-basvuru" class="nav-btn hidden w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="basvuru"><i data-lucide="send" class="mr-3 w-4 h-4"></i> Komite Başvurusu</button>
+                <button onclick="showTab('liderlik')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="liderlik"><i data-lucide="trophy" class="mr-3 w-4 h-4"></i> Liderlik Tablosu</button>
+                <button onclick="showTab('forum')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="forum"><i data-lucide="message-square" class="mr-3 w-4 h-4"></i> Fikir Alanı</button>
+                <button onclick="showTab('takvim')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="takvim"><i data-lucide="calendar" class="mr-3 w-4 h-4"></i> Takvim</button>
+                <button onclick="showTab('komite-yonetim')" id="nav-committee-head" class="nav-btn hidden w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="komite-yonetim"><i data-lucide="shield-check" class="mr-3 w-4 h-4"></i> Komite Yönetimi</button>
+                <button onclick="showTab('komiteler')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="komiteler"><i data-lucide="users" class="mr-3 w-4 h-4"></i> Komiteler</button>
+                <div id="admin-links" class="hidden pt-4 border-t border-gray-800 mt-4 space-y-2">
+                    <p class="px-4 text-[10px] text-accent font-bold uppercase tracking-widest mb-2">Yönetim</p>
+                    <a href="admin.html" class="w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center"><i data-lucide="shield" class="mr-3 w-4 h-4"></i> Yönetim Paneli</a>
+                </div>
+            </nav>
+            <div class="p-4 border-t border-gray-800"><button onclick="ForumDB.logout()" class="w-full text-left px-4 py-3 rounded-lg hover:text-accent transition text-sm font-bold uppercase tracking-widest flex items-center"><i data-lucide="log-out" class="mr-3 w-4 h-4"></i> Çıkış</button></div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 md:ml-64 min-h-screen">
+            <header class="bg-white h-20 border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-10">
+                <h1 id="tab-title" class="text-xl font-black uppercase tracking-tight">Profilim</h1>
+                <div class="relative flex items-center space-x-4">
+                    <button type="button" onclick="toggleUserMenu()" class="flex items-center space-x-4 group hover:opacity-90 transition-all duration-300 focus:outline-none">
+                        <div class="text-right hidden sm:block">
+                            <p id="user-name" class="text-sm font-bold group-hover:text-accent">Yükleniyor...</p>
+                            <p id="user-role-label" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Üye</p>
+                        </div>
+                        <div class="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold border-2 border-accent transition-all shadow-sm" id="user-initials">F</div>
+                    </button>
+                    <div id="user-menu" class="hidden absolute right-0 top-12 w-40 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 text-sm">
+                        <a href="profile.html" class="block px-4 py-2 hover:bg-gray-50 text-gray-700">Profili Gör</a>
+                        <button type="button" onclick="ForumDB.logout()" class="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50">Çıkış Yap</button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-8 max-w-6xl mx-auto">
+                <!-- Point 1, 8: Profil Tab -->
+                <div id="tab-profil" class="tab-content space-y-8">
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 space-y-8">
+                            <!-- Stats Cards -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" data-aos="fade-up">
+                                <div class="bg-black text-white p-6 rounded-3xl shadow-xl flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <p class="text-[10px] font-black uppercase tracking-widest text-accent">Mevcut Seviye</p>
+                                        <i data-lucide="award" class="w-4 h-4 text-accent"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-black" id="dash-xp-level">Seviye 1</p>
+                                        <p class="text-[10px] font-bold text-gray-400 uppercase" id="dash-xp-title">Yeni Üye</p>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Toplam XP</p>
+                                        <i data-lucide="zap" class="w-4 h-4 text-yellow-500"></i>
+                                    </div>
+                                    <p class="text-2xl font-black" id="dash-stat-xp">0</p>
+                                </div>
+                                <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Takipçi</p>
+                                        <i data-lucide="users" class="w-4 h-4 text-blue-500"></i>
+                                    </div>
+                                    <p class="text-2xl font-black" id="dash-stat-followers">0</p>
+                                </div>
+                                <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Bildirim</p>
+                                        <i data-lucide="bell" class="w-4 h-4 text-accent"></i>
+                                    </div>
+                                    <p class="text-2xl font-black" id="dash-stat-notifications">0</p>
+                                </div>
+                            </div>
+
+                            <!-- XP Progress Bar -->
+                            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100" data-aos="fade-up">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 flex items-center"><i data-lucide="trending-up" class="mr-2 w-3 h-3 text-accent"></i> Seviye İlerlemesi</h3>
+                                    <span class="text-[10px] font-black text-accent uppercase tracking-widest" id="xp-progress-text">0 / 0 XP</span>
+                                </div>
+                                <div class="w-full h-4 bg-gray-100 rounded-full overflow-hidden p-1">
+                                    <div id="xp-progress-bar" class="h-full bg-accent rounded-full transition-all duration-1000 relative group" style="width: 0%">
+                                        <div class="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-sm scale-0 group-hover:scale-100 transition-transform"></div>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-gray-400 font-bold mt-3 uppercase tracking-tighter" id="xp-remaining-text">Sonraki seviye için 0 XP kaldı.</p>
+                            </div>
+
+                            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100" data-aos="fade-up">
+                                <h3 class="text-lg font-black mb-6 uppercase tracking-tight">Kişisel Bilgiler</h3>
+                                <div class="grid md:grid-cols-2 gap-8">
+                                    <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Ad Soyad</p><p id="p-name" class="font-bold text-lg">-</p></div>
+                                    <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sınıf</p><p id="p-grade" class="font-bold text-lg">-</p></div>
+                                    <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">İlgi Alanları</p><p id="p-interests" class="font-bold text-lg">-</p></div>
+                                    <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Komiteler</p><div id="p-committees" class="flex flex-wrap gap-2 mt-2"></div></div>
+                                </div>
+                                <div class="mt-8"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Biyografi</p><p id="p-intro" class="text-gray-700 leading-relaxed">-</p></div>
+                            </div>
+
+                            <!-- Notifications -->
+                            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100" data-aos="fade-up">
+                                <h3 class="text-lg font-black mb-6 uppercase tracking-tight flex items-center"><i data-lucide="bell" class="mr-2 text-accent"></i> Bildirimler</h3>
+                                <div class="space-y-4" id="notifications-list"></div>
+                            </div>
+
+                            <!-- Committee Application Status (Visible for normal members) -->
+                            <div id="member-application-status" class="hidden bg-white p-8 rounded-3xl shadow-sm border border-gray-100" data-aos="fade-up">
+                                <h3 class="text-lg font-black mb-6 uppercase tracking-tight flex items-center"><i data-lucide="file-text" class="mr-2 text-accent"></i> Komite Başvuru Durumu</h3>
+                                <div id="app-status-content" class="space-y-4">
+                                    <!-- Dynamic Application Info -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-8">
+                            <div class="bg-black text-white p-8 rounded-3xl shadow-xl" data-aos="fade-left">
+                                <h3 class="text-lg font-black mb-6 uppercase tracking-tight text-accent">Rozetlerim</h3>
+                                <div id="p-badges" class="grid grid-cols-2 gap-4"></div>
+                            </div>
+
+                            <!-- Suggestions -->
+                            <div class="bg-black text-white p-8 rounded-3xl shadow-xl" data-aos="fade-left">
+                                <h3 class="text-lg font-black mb-6 uppercase tracking-tight text-accent">Önerilen Kişiler</h3>
+                                <div class="space-y-4" id="follow-suggestions"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Tab -->
+                <div id="tab-sosyal" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <h2 class="text-2xl font-black uppercase tracking-tight">Sosyal Ağım</h2>
+                        <div class="relative flex-1 max-w-md">
+                            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                            <input type="text" id="social-search-input" oninput="searchSocialUsers(this.value)" placeholder="İsim, komite veya ilgi alanı ile ara..." class="w-full pl-12 pr-4 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-accent outline-none text-sm transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Search Results (Hidden by default) -->
+                    <div id="social-search-results" class="hidden space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center"><i data-lucide="search" class="mr-2 w-3 h-3"></i> Arama Sonuçları</h3>
+                            <button onclick="clearSocialSearch()" class="text-[10px] font-bold text-accent hover:underline">Temizle</button>
+                        </div>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="search-users-list"></div>
+                    </div>
+
+                    <!-- Main Social Sections -->
+                    <div id="social-main-content" class="space-y-12">
+                        <!-- Follow Suggestions -->
+                        <section class="space-y-6">
+                            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center"><i data-lucide="sparkles" class="mr-2 w-3 h-3 text-accent"></i> Senin İçin Öneriler</h3>
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="social-suggestions-list"></div>
+                        </section>
+
+                        <div class="grid lg:grid-cols-2 gap-12">
+                            <!-- Following -->
+                            <section class="space-y-6">
+                                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center"><i data-lucide="user-check" class="mr-2 w-3 h-3 text-accent"></i> Takip Ettiklerim</h3>
+                                <div class="space-y-4" id="social-following-list"></div>
+                            </section>
+
+                            <!-- Followers -->
+                            <section class="space-y-6">
+                                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center"><i data-lucide="users" class="mr-2 w-3 h-3 text-accent"></i> Takipçilerim</h3>
+                                <div class="space-y-4" id="social-followers-list"></div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liderlik Tablosu Tab -->
+                <div id="tab-liderlik" class="tab-content hidden space-y-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-black uppercase tracking-tight">Liderlik Tablosu</h2>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Platformun en aktif üyeleri</p>
+                        </div>
+                        <div class="flex bg-white p-1 rounded-xl border border-gray-100 shadow-sm">
+                            <button class="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-black text-white rounded-lg transition-all">Tüm Zamanlar</button>
+                            <button class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-all">Haftalık</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden" data-aos="fade-up">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50/50">
+                                    <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Sıra</th>
+                                    <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Üye</th>
+                                    <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Seviye</th>
+                                    <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Toplam XP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-list">
+                                <!-- Dynamic Leaderboard Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Committee Application Tab -->
+                <div id="tab-basvuru" class="tab-content hidden space-y-8">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100" data-aos="fade-up">
+                            <div class="flex items-center space-x-4 mb-8">
+                                <div class="p-4 bg-accent text-white rounded-2xl shadow-lg shadow-accent/20"><i data-lucide="send" class="w-8 h-8"></i></div>
+                                <div>
+                                    <h2 class="text-2xl font-black uppercase tracking-tight">Komite Başvuru Formu</h2>
+                                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Forum ailesine katılmak için ilk adımını at.</p>
+                                </div>
+                            </div>
+                            
+                            <form id="committee-app-form" class="space-y-6">
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Başvurulan Komite</label>
+                                        <select id="app-committee" required class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-accent outline-none transition-all">
+                                            <option value="" disabled selected>Bir komite seçiniz...</option>
+                                            <option value="bilim">Bilim ve Akademik Çalışmalar</option>
+                                            <option value="teknoloji">Teknoloji ve Girişimcilik</option>
+                                            <option value="sanat">Sanat ve Kültür</option>
+                                            <option value="sosyal">Sosyal Sorumluluk</option>
+                                            <option value="organizasyon">Organizasyon ve İletişim</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">İlgi Alanların</label>
+                                        <input type="text" id="app-interests-input" required placeholder="Örn: Yazılım, Tasarım, Müzik" class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-accent outline-none transition-all">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Neden Katılmak İstiyorsun?</label>
+                                    <textarea id="app-reason" required rows="4" placeholder="Motivasyonunu ve komiteye neler katabileceğini açıkla..." class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-accent outline-none transition-all resize-none"></textarea>
+                                </div>
+                                <button type="submit" class="w-full py-5 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-accent transition-all shadow-xl hover:scale-[1.02] active:scale-95 duration-300">Başvuruyu Gönder</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Access Denied Template -->
+                <div id="tab-access-denied" class="tab-content hidden flex items-center justify-center min-h-[60vh]">
+                    <div class="max-w-md w-full text-center space-y-8" data-aos="zoom-in">
+                        <div class="w-24 h-24 bg-red-50 text-accent rounded-full flex items-center justify-center mx-auto shadow-sm">
+                            <i data-lucide="lock" class="w-10 h-10"></i>
+                        </div>
+                        <div class="space-y-4">
+                            <h2 class="text-2xl font-black uppercase tracking-tight text-gray-900">Erişim Engellendi</h2>
+                            <p class="text-gray-500 font-medium">Projeleri ve görevleri görüntüleyebilmek için bir komiteye kabul edilmeniz gerekir.</p>
+                        </div>
+                        <div class="pt-4">
+                            <button onclick="showTab('basvuru')" class="bg-black text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-accent transition shadow-xl hover:scale-105 active:scale-95 duration-300">Komite Başvurusu Yap</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Yeni: Basit Proje Sistemi Tab -->
+                <div id="tab-projeler" class="tab-content hidden space-y-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-black uppercase tracking-tight">Proje Sistemi</h2>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Tüm aktif projeleri tek ekranda gör</p>
+                        </div>
+                        <div id="admin-project-controls" class="hidden">
+                            <button onclick="openModal('project-modal')" class="bg-black text-white px-6 py-2.5 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-accent transition">+ Yeni Proje</button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 text-[10px] text-gray-500 font-black uppercase tracking-widest flex items-center space-x-3">
+                        <i data-lucide="info" class="w-3 h-3"></i>
+                        <span>Komite başkanları kendi kategorilerindeki projeleri yönetebilir, tüm üyeler aktif projeleri inceleyebilir.</span>
+                    </div>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="projects-list"></div>
+                </div>
+
+                <!-- Point 7: Görevler Tab -->
+                <div id="tab-gorevler" class="tab-content hidden space-y-8">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-black uppercase tracking-tight">Görev Sistemi</h2>
+                        <div id="admin-task-controls" class="hidden">
+                            <button onclick="openModal('task-modal')" class="bg-black text-white px-6 py-2.5 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-accent transition">+ Yeni Görev</button>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6" id="tasks-list"></div>
+                </div>
+
+                <!-- Point 5: Fikir Alanı Tab -->
+                <div id="tab-forum" class="tab-content hidden space-y-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-black uppercase tracking-tight">Fikir & Proje Önerileri</h2>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Geleceği birlikte şekillendirelim</p>
+                        </div>
+                        <button onclick="openModal('idea-modal')" class="bg-black text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-accent transition-all shadow-xl hover:scale-105 active:scale-95 duration-300">+ Fikir Paylaş</button>
+                    </div>
+                    <div class="grid gap-8" id="ideas-list"></div>
+                </div>
+
+                <!-- Comment Modal -->
+                <div id="comment-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4">
+                    <div class="bg-white max-w-2xl w-full rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]" data-aos="zoom-in">
+                        <div class="p-8 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                            <div>
+                                <h3 class="text-xl font-black uppercase tracking-tight" id="comment-modal-title">Yorumlar</h3>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1" id="comment-modal-subtitle">Fikir hakkındaki düşünceler</p>
+                            </div>
+                            <button onclick="closeModal('comment-modal')" class="p-2 hover:bg-white rounded-xl transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-8 space-y-6" id="comments-container">
+                            <!-- Dynamic Comments -->
+                        </div>
+                        <div class="p-8 bg-gray-50 border-t border-gray-100">
+                            <form id="comment-form" class="flex flex-col space-y-4">
+                                <input type="hidden" id="comment-idea-id">
+                                <textarea id="comment-text" required rows="3" placeholder="Fikir hakkındaki düşüncelerini yaz..." class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-accent outline-none transition-all resize-none shadow-sm"></textarea>
+                                <button type="submit" class="self-end bg-black text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-accent transition shadow-lg hover:scale-105 active:scale-95 duration-300">Yorum Yap</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Point 4: Takvim Tab -->
+                <div id="tab-takvim" class="tab-content hidden space-y-8">
+                    <h2 class="text-2xl font-black uppercase tracking-tight">Etkinlik Takvimi</h2>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100" id="calendar-container">
+                        <!-- Simplified Calendar for simulation -->
+                        <div class="grid grid-cols-7 gap-2 text-center text-[10px] font-black uppercase text-gray-400 mb-4">
+                            <div>Pzt</div><div>Sal</div><div>Çar</div><div>Per</div><div>Cum</div><div>Cmt</div><div>Paz</div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-2" id="calendar-grid"></div>
+                    </div>
+                </div>
+
+                <!-- Point 6, 13: Komiteler Tab -->
+                <div id="tab-komiteler" class="tab-content hidden space-y-8">
+                    <h2 class="text-2xl font-black uppercase tracking-tight">Komiteler & İstatistik</h2>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="committees-list"></div>
+                </div>
+
+                <!-- RBAC: Committee Head Management Tab -->
+                <div id="tab-komite-yonetim" class="tab-content hidden space-y-8">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="p-3 bg-accent text-white rounded-2xl shadow-lg shadow-accent/30">
+                                <i data-lucide="shield-check" class="w-7 h-7"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Komite Yönetim Paneli</p>
+                                <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight" id="ch-committee-name">Komite Yönetimi</h2>
+                            </div>
+                        </div>
+                        <div class="hidden md:flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-50 text-green-600 border border-green-100">
+                                <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                                Başkan Yetkileri Aktif
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <!-- Left column: lists -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Applications -->
+                            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                                <div class="px-8 pt-6 pb-4 flex items-center justify-between border-b border-gray-50">
+                                    <div>
+                                        <h3 class="text-sm md:text-lg font-black uppercase tracking-tight flex items-center">
+                                            <i data-lucide="inbox" class="w-4 h-4 mr-2 text-accent"></i>
+                                            Komite Başvuruları
+                                        </h3>
+                                        <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Yeni başvuruları buradan yönet</p>
+                                    </div>
+                                </div>
+                                <div class="p-4 md:p-6 overflow-hidden" id="ch-apps-list"></div>
+                            </div>
+
+                            <!-- Members -->
+                            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                                <div class="px-8 pt-6 pb-4 flex items-center justify-between border-b border-gray-50">
+                                    <div>
+                                        <h3 class="text-sm md:text-lg font-black uppercase tracking-tight flex items-center">
+                                            <i data-lucide="users" class="w-4 h-4 mr-2 text-accent"></i>
+                                            Komite Üyeleri
+                                        </h3>
+                                        <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Aktif ekip yapısını görüntüle</p>
+                                    </div>
+                                </div>
+                                <div class="p-4 md:p-6 overflow-hidden" id="ch-members-list"></div>
+                            </div>
+
+                            <!-- Project Proposals -->
+                            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                                <div class="px-8 pt-6 pb-4 flex items-center justify-between border-b border-gray-50">
+                                    <div>
+                                        <h3 class="text-sm md:text-lg font-black uppercase tracking-tight flex items-center text-accent">
+                                            <i data-lucide="lightbulb" class="w-4 h-4 mr-2"></i>
+                                            Proje Önerileri
+                                        </h3>
+                                        <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Komiten için bekleyen proje fikirleri</p>
+                                    </div>
+                                </div>
+                                <div class="p-4 md:p-6 overflow-hidden" id="ch-projects-list"></div>
+                            </div>
+
+                            <!-- Project Join Requests -->
+                            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                                <div class="px-6 md:px-8 pt-6 pb-4 flex items-center justify-between border-b border-gray-50">
+                                    <div>
+                                        <h3 class="text-sm md:text-lg font-black uppercase tracking-tight flex items-center">
+                                            <i data-lucide="user-plus" class="w-4 h-4 mr-2 text-accent"></i>
+                                            Proje Katılım İstekleri
+                                        </h3>
+                                        <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Projelerine katılmak isteyen üyeleri yönet</p>
+                                    </div>
+                                    <span id="ch-join-req-count" class="bg-black text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                        0 Bekleyen
+                                    </span>
+                                </div>
+                                <div class="p-4 md:p-6 space-y-4 max-h-[360px] overflow-y-auto" id="ch-join-requests-list"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right column: stats -->
+                        <div class="space-y-6">
+                            <div class="bg-black text-white p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+                                <div class="absolute -top-10 -right-10 w-40 h-40 bg-accent/30 rounded-full blur-3xl"></div>
+                                <div class="relative z-10">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.28em] mb-2">Özet Görünüm</p>
+                                    <h3 class="text-xl font-black mb-6 uppercase tracking-tight text-accent">Hızlı İstatistikler</h3>
+                                    <div id="ch-stats" class="grid grid-cols-2 gap-4"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="project-modal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white max-w-lg w-full rounded-3xl p-8 shadow-2xl">
+            <h3 class="text-xl font-black mb-6 uppercase tracking-tight">Yeni Proje Oluştur</h3>
+            <form id="project-form" class="space-y-4">
+                <input id="proj-title" placeholder="Proje Adı" required class="w-full px-4 py-3 border rounded-xl">
+                <textarea id="proj-desc" placeholder="Açıklama" required class="w-full px-4 py-3 border rounded-xl" rows="3"></textarea>
+                <select id="proj-cat" class="w-full px-4 py-3 border rounded-xl">
+                    <option value="bilim">Bilim</option><option value="teknoloji">Teknoloji</option><option value="sanat">Sanat</option>
+                </select>
+                <input id="proj-needs" placeholder="Ekip İhtiyacı (Örn: 2 Yazılımcı, 1 Tasarımcı)" class="w-full px-4 py-3 border rounded-xl">
+                <div class="flex space-x-4"><button type="button" onclick="closeModal('project-modal')" class="flex-1 py-3 border rounded-xl font-bold uppercase tracking-widest text-xs">İptal</button><button type="submit" class="flex-1 py-3 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent">Oluştur</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="idea-modal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white max-w-lg w-full rounded-3xl p-8 shadow-2xl">
+            <h3 class="text-xl font-black mb-6 uppercase tracking-tight">Fikrini Paylaş</h3>
+            <form id="idea-form" class="space-y-4">
+                <input id="idea-title" placeholder="Başlık" required class="w-full px-4 py-3 border rounded-xl">
+                <textarea id="idea-content" placeholder="Fikrini anlat..." required class="w-full px-4 py-3 border rounded-xl" rows="4"></textarea>
+                <div class="flex space-x-4"><button type="button" onclick="closeModal('idea-modal')" class="flex-1 py-3 border rounded-xl font-bold uppercase tracking-widest text-xs">İptal</button><button type="submit" class="flex-1 py-3 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent">Paylaş</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="task-modal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white max-w-lg w-full rounded-3xl p-8 shadow-2xl">
+            <h3 class="text-xl font-black mb-6 uppercase tracking-tight">Yeni Görev Tanımla</h3>
+            <form id="task-form" class="space-y-4">
+                <input id="task-title" placeholder="Görev Başlığı" required class="w-full px-4 py-3 border rounded-xl">
+                <textarea id="task-desc" placeholder="Görev Detayı" required class="w-full px-4 py-3 border rounded-xl" rows="3"></textarea>
+                <select id="task-committee" class="w-full px-4 py-3 border rounded-xl" onchange="updateAssigneeList(this.value)">
+                    <option value="" disabled selected>Komite Seçiniz...</option>
+                    <option value="bilim">Bilim</option><option value="teknoloji">Teknoloji</option><option value="sanat">Sanat</option><option value="sosyal">Sosyal</option><option value="organizasyon">Organizasyon</option>
+                </select>
+                <select id="task-assignee" class="w-full px-4 py-3 border rounded-xl">
+                    <option value="" disabled selected>Sorumlu Seçiniz...</option>
+                </select>
+                <div class="flex space-x-4"><button type="button" onclick="closeModal('task-modal')" class="flex-1 py-3 border rounded-xl font-bold uppercase tracking-widest text-xs">İptal</button><button type="submit" class="flex-1 py-3 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent">Tanımla</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-accent'));
+            document.querySelector(`[data-tab="${tabId}"]`)?.classList.add('bg-accent');
+            const titles = { 
+                profil: 'Profilim', 
+                sosyal: 'Sosyal Ağım', 
+                projeler: 'Proje Sistemi', 
+                gorevler: 'Görevlerim', 
+                forum: 'Fikir Alanı', 
+                takvim: 'Etkinlik Takvimi', 
+                komiteler: 'Komiteler',
+                basvuru: 'Komite Başvurusu',
+                'access-denied': 'Erişim Engellendi'
+            };
+            document.getElementById('tab-title').textContent = titles[tabId] || 'Panel';
+            loadTabData(tabId);
+        }
+
+        function showAccessDenied(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-access-denied').classList.remove('hidden');
+            document.getElementById('tab-title').textContent = 'Erişim Engellendi';
+            lucide.createIcons();
+        }
+
+        function loadTabData(tabId) {
+            const session = ForumDB.getSession();
+            const users = ForumDB.getUsers();
+            const user = users.find(u => Number(u.id) === Number(session.id)) || session;
+            const leadOf = user.leadOf || (user.role === 'committee_head' ? (user.committees?.[0] || null) : null);
+            
+            // RBAC Check for Projects and Tasks
+            const restrictedTabs = ['projeler', 'gorevler'];
+            if (restrictedTabs.includes(tabId) && !ForumDB.isCommitteeMember(user)) {
+                showAccessDenied(tabId);
+                return;
+            }
+
+            if (tabId === 'profil') {
+                const users = ForumDB.getUsers();
+                const u = users.find(usr => Number(usr.id) === Number(user.id));
+                
+                // 1. Basic Info
+                document.getElementById('p-name').textContent = u.fullName;
+                document.getElementById('p-grade').textContent = u.grade;
+                document.getElementById('p-interests').textContent = u.interests;
+                document.getElementById('p-intro').textContent = u.intro;
+                document.getElementById('p-committees').innerHTML = u.committees.map(c => `<span class="bg-black text-white px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest">${c}</span>`).join('');
+                
+                // 2. Badges
+                const badgeInfo = ForumDB.getBadgesInfo();
+                document.getElementById('p-badges').innerHTML = u.badges.map(b => `
+                    <div class="bg-white/10 p-3 rounded-xl flex flex-col items-center text-center">
+                        <i data-lucide="${badgeInfo[b]?.icon || 'award'}" class="w-6 h-6 mb-2"></i>
+                        <span class="text-[8px] font-black uppercase tracking-tighter">${badgeInfo[b]?.label || b}</span>
+                    </div>
+                `).join('');
+
+                // 3. Stats & XP
+                document.getElementById('dash-stat-followers').textContent = (u.followers || []).length;
+                document.getElementById('dash-stat-notifications').textContent = (u.notifications || []).filter(n => !n.read).length;
+                
+                const xpInfo = ForumDB.getUserXPInfo(user.id);
+                document.getElementById('dash-xp-level').textContent = `Seviye ${xpInfo.level}`;
+                document.getElementById('dash-xp-title').textContent = xpInfo.title;
+                document.getElementById('dash-stat-xp').textContent = xpInfo.xp;
+                document.getElementById('xp-progress-text').textContent = `${xpInfo.xp} / ${xpInfo.nextLevelXP || 'Max'} XP`;
+                document.getElementById('xp-progress-bar').style.width = `${xpInfo.progress}%`;
+                document.getElementById('xp-remaining-text').textContent = xpInfo.nextLevelXP ? `Sonraki seviye için ${xpInfo.nextLevelXP - xpInfo.xp} XP kaldı.` : 'En yüksek seviyeye ulaştın!';
+
+                // 4. Notifications
+                const notifList = document.getElementById('notifications-list');
+                const notifs = u.notifications || [];
+                notifList.innerHTML = notifs.length === 0 ? '<p class="text-sm italic text-gray-400">Henüz bildirim yok.</p>' : notifs.slice(0, 5).map(n => `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl ${n.read ? 'opacity-50' : 'border-l-4 border-accent'}">
+                        <div class="flex items-center space-x-4">
+                            <div class="p-2 ${n.type === 'level_up' ? 'bg-accent text-white' : 'bg-gray-200 text-gray-500'} rounded-xl">
+                                <i data-lucide="${n.type === 'level_up' ? 'award' : 'bell'}" class="w-4 h-4"></i>
+                            </div>
+                            <p class="text-sm font-medium">${n.message}</p>
+                        </div>
+                        <span class="text-[8px] font-black uppercase text-gray-400">${new Date(n.createdAt).toLocaleDateString()}</span>
+                    </div>
+                `).join('');
+
+                // 5. Follow Suggestions
+                const suggestions = ForumDB.getFollowSuggestions(user.id);
+                document.getElementById('follow-suggestions').innerHTML = suggestions.length === 0 ? '<p class="text-[10px] italic text-gray-500">Öneri yok.</p>' : suggestions.map(s => `
+                    <div class="flex items-center justify-between group">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-[10px] font-bold">${s.fullName.charAt(0)}</div>
+                            <div>
+                                <a href="profile.html?id=${s.id}" class="text-xs font-bold hover:text-accent transition block">${s.fullName}</a>
+                                <p class="text-[8px] text-gray-500 uppercase font-black tracking-tighter">Seviye ${s.level || 1} • ${s.suggestionReason}</p>
+                            </div>
+                        </div>
+                        <button onclick="quickFollow(${s.id})" class="text-[8px] font-black uppercase tracking-widest bg-accent px-3 py-1 rounded-lg hover:scale-105 transition">Takip Et</button>
+                    </div>
+                `).join('');
+                
+                // Show application status if member
+                const appStatusDiv = document.getElementById('member-application-status');
+                if (user.role === 'member') {
+                    appStatusDiv.classList.remove('hidden');
+                    const apps = ForumDB.getUserApplications(user.id);
+                    const lastApp = apps[apps.length - 1];
+                    
+                    if (lastApp) {
+                        const statusColors = { pending: 'text-yellow-500 bg-yellow-50', accepted: 'text-green-500 bg-green-50', rejected: 'text-red-500 bg-red-50' };
+                        const statusLabels = { pending: 'Bekliyor', accepted: 'Onaylandı', rejected: 'Reddedildi' };
+                        document.getElementById('app-status-content').innerHTML = `
+                            <div class="flex items-center justify-between p-4 rounded-2xl border border-gray-100">
+                                <div>
+                                    <p class="text-sm font-bold">${lastApp.committeeId.toUpperCase()} Komitesi Başvurusu</p>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase mt-1">${new Date(lastApp.submittedAt).toLocaleDateString()}</p>
+                                </div>
+                                <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusColors[lastApp.status]}">${statusLabels[lastApp.status]}</span>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('app-status-content').innerHTML = `
+                            <div class="text-center py-4">
+                                <p class="text-sm text-gray-500 mb-4">Henüz bir komiteye başvurmadınız.</p>
+                                <button onclick="showTab('basvuru')" class="text-xs font-black uppercase tracking-widest text-accent hover:underline">Şimdi Başvur</button>
+                            </div>
+                        `;
+                    }
+                } else {
+                    appStatusDiv.classList.add('hidden');
+                }
+                
+                lucide.createIcons();
+            } else if (tabId === 'liderlik') {
+                const leaderboard = ForumDB.getLeaderboard();
+                document.getElementById('leaderboard-list').innerHTML = leaderboard.map((u, idx) => `
+                    <tr class="hover:bg-gray-50/50 transition-colors group">
+                        <td class="px-8 py-6 font-black text-lg ${idx < 3 ? 'text-accent' : 'text-gray-300'}">#${idx + 1}</td>
+                        <td class="px-8 py-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold shadow-sm">${u.fullName.charAt(0)}</div>
+                                <div>
+                                    <p class="font-bold text-sm">${u.fullName}</p>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">${u.grade}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6">
+                            <span class="px-3 py-1 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-lg">Seviye ${u.level || 1}</span>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <p class="font-black text-lg">${u.xp || 0} <span class="text-[10px] text-gray-400 ml-1">XP</span></p>
+                        </td>
+                    </tr>
+                `).join('');
+                lucide.createIcons();
+            } else if (tabId === 'basvuru') {
+                // Application tab logic (if any)
+            } else if (tabId === 'sosyal') {
+                loadSocialData();
+            } else if (tabId === 'projeler') {
+                const projects = ForumDB.getProjects().filter(p => p.status === 'active');
+                const isAdmin = user.role === 'admin';
+                const isHead = user.role === 'committee_head';
+                const currentUserId = Number(user.id);
+
+                const projectsListEl = document.getElementById('projects-list');
+                document.getElementById('admin-project-controls').classList.toggle('hidden', !isAdmin && !isHead);
+
+                if (!projectsListEl) return;
+
+                if (projects.length === 0) {
+                    projectsListEl.innerHTML = '<p class="col-span-full text-center text-gray-400 py-20 italic">Henüz yayında olan bir proje bulunmuyor.</p>';
+                    return;
+                }
+
+                projectsListEl.innerHTML = projects.map((p, idx) => {
+                    const isMember = (p.members || []).map(Number).includes(currentUserId);
+                    const existingRequest = (p.requests || []).find(r => Number(r.userId) === currentUserId);
+                    const canDelete = isAdmin || isHead;
+                    const statusBadge = p.status === 'pending' ? `<span class="bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border border-yellow-100 mr-2">Onay Bekliyor</span>` : '';
+
+                    let footer;
+                    if (isMember || isAdmin || isHead) {
+                        footer = `<a href="project-details.html?id=${p.id}" class="w-full bg-black text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-center hover:bg-accent transition shadow-lg">Projeyi Yönet / Görüntüle</a>`;
+                    } else if (existingRequest) {
+                        const label = existingRequest.status === 'pending' ? 'Başvurun Beklemede' : 'Başvurun Reddedildi';
+                        footer = `<span class="w-full text-center py-3 bg-gray-50 text-gray-400 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100">${label}</span>`;
+                    } else {
+                        footer = `<a href="project-details.html?id=${p.id}" class="w-full text-center py-3 border-2 border-black text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition">Projeyi İncele & Katıl</a>`;
+                    }
+
+                    return `
+                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-all duration-300" data-aos="zoom-in" data-aos-delay="${idx * 50}">
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center">
+                                        <span class="bg-accent/10 text-accent px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border border-accent/10 mr-2">${p.category || 'GENEL'}</span>
+                                        ${statusBadge}
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <a href="project-details.html?id=${p.id}" class="p-2 bg-gray-50 text-gray-400 hover:text-accent rounded-xl transition"><i data-lucide="external-link" class="w-4 h-4"></i></a>
+                                        ${canDelete ? `<button onclick="deleteProject(${p.id})" class="p-2 bg-gray-50 text-gray-400 hover:text-red-500 rounded-xl transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                                    </div>
+                                </div>
+                                <h3 class="font-black text-xl mb-3 tracking-tight">${p.title}</h3>
+                                <p class="text-xs text-gray-500 leading-relaxed mb-6">${p.description}</p>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest">İhtiyaçlar</p>
+                                        <p class="text-[10px] font-bold text-black">${p.needs || 'Genel Katılım'}</p>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Ekip</p>
+                                        <p class="text-[10px] font-bold text-black">${(p.members || []).length} Üye</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between">
+                                ${footer}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                lucide.createIcons();
+                if (typeof AOS !== 'undefined') AOS.refresh();
+            } else if (tabId === 'gorevler') {
+                let tasks = ForumDB.getTasks();
+                const isAdmin = user.role === 'admin';
+                const isHead = user.role === 'committee_head';
+                
+                // Filter tasks based on role
+                if (!isAdmin) {
+                    if (isHead) {
+                        // Committee head sees all tasks for their committee
+                        tasks = tasks.filter(t => leadOf && String(t.committee) === String(leadOf));
+                    } else {
+                        // Regular members only see tasks assigned to them
+                        tasks = tasks.filter(t => Number(t.assigneeId) === Number(user.id));
+                    }
+                }
+
+                document.getElementById('admin-task-controls').classList.toggle('hidden', !isAdmin && !isHead);
+
+                document.getElementById('tasks-list').innerHTML = tasks.length === 0 ? '<p class="col-span-full text-center text-gray-400 py-10 italic">Henüz tanımlanmış bir görev bulunmuyor.</p>' : tasks.map((t, idx) => {
+                    const canDelete = isAdmin || (isHead && leadOf && String(t.committee) === String(leadOf));
+                    return `
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100" id="task-card-${t.id}" data-aos="fade-up" data-aos-delay="${idx * 50}">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <span class="bg-black text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">${t.committee}</span>
+                                    <h3 class="font-bold text-lg mt-1">${t.title}</h3>
+                                    <p class="text-[8px] font-black text-gray-400 uppercase mt-1">Sorumlu: ${t.assigneeName || 'Atanmamış'}</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${t.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${({ todo: 'Yapılacak', in_progress: 'Devam Ediyor', completed: 'Tamamlandı' }[t.status] || t.status)}</span>
+                                    ${canDelete ? `<button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-6">${t.desc}</p>
+                            ${isAdmin || isHead ? `
+                                <select onchange="updateTaskStatus(${t.id}, this.value)" class="w-full bg-gray-50 border-none rounded-lg px-4 py-2 text-[10px] font-bold uppercase tracking-widest outline-none">
+                                    <option value="todo" ${t.status === 'todo' ? 'selected' : ''}>Yapılacak</option>
+                                    <option value="in_progress" ${t.status === 'in_progress' ? 'selected' : ''}>Devam Ediyor</option>
+                                    <option value="completed" ${t.status === 'completed' ? 'selected' : ''}>Tamamlandı</option>
+                                </select>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+                lucide.createIcons();
+                AOS.refresh(); // Animasyonları yenile
+            } else if (tabId === 'forum') {
+                const ideas = ForumDB.getIdeas();
+                document.getElementById('ideas-list').innerHTML = ideas.map((i, idx) => {
+                    const isLiked = i.likes?.includes(Number(user.id));
+                    return `
+                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300" data-aos="fade-up" data-aos-delay="${idx * 50}">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center font-bold text-gray-400 border border-gray-100">${i.userName?.charAt(0) || 'F'}</div>
+                                    <div>
+                                        <h3 class="font-bold text-lg leading-tight">${i.title}</h3>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">${i.userName || 'Anonim'} • ${new Date(i.createdAt).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 mb-6 text-sm leading-relaxed">${i.content}</p>
+                            <div class="flex items-center space-x-6 pt-6 border-t border-gray-50">
+                                <button onclick="toggleLike(${i.id})" class="flex items-center space-x-2 transition-all duration-300 ${isLiked ? 'text-accent' : 'text-gray-400 hover:text-accent'}">
+                                    <i data-lucide="heart" class="w-5 h-5 ${isLiked ? 'fill-accent' : ''}"></i>
+                                    <span class="text-xs font-black">${i.likes?.length || 0}</span>
+                                </button>
+                                <button onclick="openComments(${i.id})" class="flex items-center space-x-2 text-gray-400 hover:text-black transition-all duration-300">
+                                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                                    <span class="text-xs font-black">${i.comments?.length || 0} Yorum</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                lucide.createIcons();
+                AOS.refresh();
+            } else if (tabId === 'komite-yonetim') {
+                const committeeId = leadOf;
+                const committeeLabels = { bilim: 'Bilim ve Akademik Çalışmalar', teknoloji: 'Teknoloji ve Girişimcilik', sanat: 'Sanat ve Kültür', sosyal: 'Sosyal Sorumluluk', organizasyon: 'Organizasyon ve İletişim' };
+                document.getElementById('ch-committee-name').textContent = committeeLabels[committeeId] || 'Komite Yönetimi';
+                
+                // Load Apps for this committee (modern cards)
+                const apps = ForumDB.getApplications().filter(a => a.committeeId === committeeId);
+                document.getElementById('ch-apps-list').innerHTML = apps.length === 0
+                    ? '<p class="text-sm italic text-gray-500">Henüz başvuru yok.</p>'
+                    : `
+                        <div class="space-y-3">
+                            ${apps.map(a => {
+                                const isPending = a.status === 'pending';
+                                const statusMap = {
+                                    pending: { label: 'Beklemede', cls: 'bg-amber-50 text-amber-700 border-amber-100' },
+                                    accepted: { label: 'Kabul Edildi', cls: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+                                    rejected: { label: 'Reddedildi', cls: 'bg-rose-50 text-rose-700 border-rose-100' }
+                                }[a.status] || { label: a.status, cls: 'bg-gray-50 text-gray-600 border-gray-100' };
+                                return `
+                                    <div class="flex items-center justify-between p-4 md:p-5 rounded-2xl border border-gray-100 bg-gray-50/60 hover:bg-white transition-all duration-200">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-xs font-black border border-gray-100">
+                                                ${(a.userName || '?').charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-bold text-gray-900">${a.userName}</p>
+                                                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                                    ${new Date(a.submittedAt).toLocaleDateString()} • ${a.committeeId?.toUpperCase() || ''}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${statusMap.cls}">
+                                                ${statusMap.label}
+                                            </span>
+                                            ${
+                                                isPending
+                                                    ? `<div class="flex items-center space-x-2">
+                                                            <button onclick="updateAppStatusCH(${a.id}, 'accepted')" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition">Onayla</button>
+                                                            <button onclick="updateAppStatusCH(${a.id}, 'rejected')" class="px-3 py-1.5 rounded-xl bg-white border border-gray-200 text-[9px] font-black uppercase tracking-widest text-gray-500 hover:text-rose-600 hover:border-rose-200 transition">Reddet</button>
+                                                       </div>`
+                                                    : ''
+                                            }
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                
+                // Load Members for this committee (modern list)
+                const members = ForumDB.getUsers().filter(u => u.committees?.includes(committeeId));
+                document.getElementById('ch-members-list').innerHTML = members.length === 0
+                    ? '<p class="text-sm italic text-gray-500">Henüz üye yok.</p>'
+                    : `
+                        <div class="divide-y divide-gray-50">
+                            ${members.map(u => `
+                                <div class="flex items-center justify-between py-3 md:py-3.5">
+                                    <div class="flex items-center space-x-3 md:space-x-4">
+                                        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-black text-gray-600 border border-gray-100">
+                                            ${u.fullName.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-900">${u.fullName}</p>
+                                            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                                ${u.grade || '-'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        ${
+                                            u.id === user.id
+                                                ? '<span class="px-3 py-1 rounded-full bg-black text-white text-[9px] font-black uppercase tracking-widest">Başkan</span>'
+                                                : `<button onclick="removeMemberCH(${u.id}, '${committeeId}')" class="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600">Çıkar</button>`
+                                        }
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                
+                // Load Stats
+                const pendingJoinReqs = ForumDB.getProjects()
+                    .filter(p => p.category === committeeId)
+                    .reduce((acc, p) => acc + (p.requests || []).filter(r => r.status === 'pending').length, 0);
+
+                document.getElementById('ch-stats').innerHTML = `
+                    <div class="bg-white/10 p-4 rounded-2xl text-center"><p class="text-2xl font-black">${members.length}</p><p class="text-[8px] font-bold uppercase text-gray-400">Üye</p></div>
+                    <div class="bg-white/10 p-4 rounded-2xl text-center"><p class="text-2xl font-black">${apps.filter(a => a.status === 'pending').length}</p><p class="text-[8px] font-bold uppercase text-gray-400">Bekleyen</p></div>
+                    <div class="bg-white/10 p-4 rounded-2xl text-center col-span-2"><p class="text-2xl font-black">${pendingJoinReqs}</p><p class="text-[8px] font-bold uppercase text-gray-400">Proje Katılım İsteği</p></div>
+                `;
+
+                // Load Project Proposals for this committee
+                const pendingProjects = ForumDB.getProjects().filter(p => p.category === committeeId && p.status === 'pending');
+                document.getElementById('ch-projects-list').innerHTML = pendingProjects.length === 0 ? '<p class="text-sm italic text-gray-500">Yeni proje önerisi yok.</p>' : `
+                    <table class="w-full text-left text-sm"><thead class="text-[10px] font-black uppercase text-gray-400 border-b"><tr><th class="py-3">Proje</th><th class="py-3">Öneren</th><th class="py-3 text-right">İşlem</th></tr></thead>
+                    <tbody>${pendingProjects.map(p => `
+                        <tr class="border-b border-gray-50"><td class="py-3 font-bold">${p.title}</td><td class="py-3 font-medium text-gray-400">${p.creatorName || 'Üye'}</td><td class="py-3 text-right">
+                            <button onclick="approveProjectCH(${p.id})" class="text-green-500 font-bold hover:underline mr-2">Onayla</button><button onclick="rejectProjectCH(${p.id})" class="text-red-500 font-bold hover:underline">Reddet</button>
+                        </td></tr>`).join('')}</tbody></table>`;
+
+                // Load Project Join Requests for this committee
+                const allProjects = ForumDB.getProjects().filter(p => p.category === committeeId);
+                const joinRequests = [];
+                allProjects.forEach(p => {
+                    (p.requests || []).forEach(r => {
+                        if (r.status === 'pending') {
+                            joinRequests.push({ ...r, projectTitle: p.title, projectId: p.id });
+                        }
+                    });
+                });
+
+                document.getElementById('ch-join-req-count').textContent = `${joinRequests.length} Bekleyen`;
+                document.getElementById('ch-join-requests-list').innerHTML = joinRequests.length === 0 ? '<p class="text-sm italic text-gray-500">Yeni katılım isteği yok.</p>' : `
+                    <div class="space-y-4">
+                        ${joinRequests.map(r => `
+                            <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-400">${r.userName.charAt(0)}</div>
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <a href="profile.html?id=${r.userId}" class="font-bold text-sm hover:text-accent transition underline decoration-dotted">${r.userName}</a>
+                                            <span class="text-[8px] font-black uppercase bg-accent/10 text-accent px-2 py-0.5 rounded-full">${r.role || 'Üye'}</span>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-widest"><i data-lucide="layout" class="w-3 h-3 inline mr-1"></i> ${r.projectTitle}</p>
+                                    </div>
+                                </div>
+                                <div class="flex-1 px-0 md:px-8">
+                                    <p class="text-xs text-gray-500 italic leading-relaxed">"${r.message}"</p>
+                                </div>
+                                <div class="flex space-x-2 shrink-0">
+                                    <button onclick="handleJoinRequestCH(${r.projectId}, ${r.userId}, 'approve')" class="px-4 py-2 bg-black text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-600 transition-all shadow-md">Onayla</button>
+                                    <button onclick="handleJoinRequestCH(${r.projectId}, ${r.userId}, 'reject')" class="px-4 py-2 bg-white text-gray-400 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-red-500 hover:border-red-200 transition-all">Reddet</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>`;
+                lucide.createIcons();
+            } else if (tabId === 'komiteler') {
+                const committeeIds = ['bilim', 'teknoloji', 'sanat', 'sosyal', 'organizasyon'];
+                const committeeLabels = { bilim: 'Bilim ve Akademik Çalışmalar', teknoloji: 'Teknoloji ve Girişimcilik', sanat: 'Sanat ve Kültür', sosyal: 'Sosyal Sorumluluk', organizasyon: 'Organizasyon ve İletişim' };
+                
+                document.getElementById('committees-list').innerHTML = committeeIds.map(id => {
+                    const stats = ForumDB.getCommitteeStats(id);
+                    return `
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                            <h3 class="font-bold text-lg mb-4">${committeeLabels[id]}</h3>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div class="bg-gray-50 p-2 rounded-lg"><p class="text-[10px] font-black text-accent">${stats.members}</p><p class="text-[8px] font-bold text-gray-400 uppercase">Üye</p></div>
+                                <div class="bg-gray-50 p-2 rounded-lg"><p class="text-[10px] font-black text-accent">${stats.projects}</p><p class="text-[8px] font-bold text-gray-400 uppercase">Proje</p></div>
+                                <div class="bg-gray-50 p-2 rounded-lg"><p class="text-[10px] font-black text-accent">${stats.events}</p><p class="text-[8px] font-bold text-gray-400 uppercase">Etkinlik</p></div>
+                            </div>
+                            <button onclick="window.location.href='komite-${id}.html'" class="w-full mt-4 py-2 border rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition">Sayfaya Git</button>
+                        </div>
+                    `;
+                }).join('');
+            } else if (tabId === 'takvim') {
+                const grid = document.getElementById('calendar-grid');
+                grid.innerHTML = '';
+                for (let i = 1; i <= 31; i++) {
+                    grid.innerHTML += `<div class="aspect-square border border-gray-100 rounded-lg flex items-center justify-center text-xs font-bold text-gray-300 hover:border-accent hover:text-accent transition cursor-pointer">${i}</div>`;
+                }
+            }
+        }
+
+        function toggleUserMenu() {
+            const menu = document.getElementById('user-menu');
+            if (!menu) return;
+            menu.classList.toggle('hidden');
+        }
+
+        function openModal(id) { 
+            const user = ForumDB.getSession();
+            if (id === 'project-modal' && user.role === 'committee_head') {
+                const select = document.getElementById('proj-cat');
+                select.value = user.leadOf || user.committees?.[0] || '';
+                select.disabled = true;
+            }
+            if (id === 'task-modal' && user.role === 'committee_head') {
+                const select = document.getElementById('task-committee');
+                select.value = user.leadOf || user.committees?.[0] || '';
+                select.disabled = true;
+                updateAssigneeList(select.value);
+            }
+            document.getElementById(id).classList.remove('hidden'); 
+        }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        document.getElementById('project-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            try {
+                const user = ForumDB.getSession();
+                const catSelect = document.getElementById('proj-cat');
+                const projectData = { 
+                    title: document.getElementById('proj-title').value, 
+                    description: document.getElementById('proj-desc').value, 
+                    category: catSelect.value, // Disabled olsa bile değeri al
+                    needs: document.getElementById('proj-needs').value, 
+                    creatorId: user.id,
+                    creatorName: user.fullName
+                };
+                
+                ForumDB.createProject(projectData);
+                closeModal('project-modal');
+                e.target.reset();
+                catSelect.disabled = false; // Reset için aç
+                loadTabData('projeler');
+                if (typeof AOS !== 'undefined') AOS.refresh();
+            } catch (err) {
+                console.error("Proje oluşturma hatası:", err);
+            }
+        });
+
+        document.getElementById('idea-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            try {
+                const user = ForumDB.getSession();
+                ForumDB.createIdea({ 
+                    title: document.getElementById('idea-title').value, 
+                    content: document.getElementById('idea-content').value, 
+                    userId: user.id, 
+                    userName: user.fullName 
+                });
+                
+                closeModal('idea-modal');
+                e.target.reset();
+                loadTabData('forum');
+                if (typeof AOS !== 'undefined') AOS.refresh();
+            } catch (err) {
+                console.error("Fikir paylaşma hatası:", err);
+            }
+        });
+
+        document.getElementById('task-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            try {
+                const commSelect = document.getElementById('task-committee');
+                const assigneeSelect = document.getElementById('task-assignee');
+                if (!assigneeSelect.value) {
+                    ForumUI.notify('Lütfen bir sorumlu seçiniz.', 'error');
+                    return;
+                }
+                ForumDB.createTask({ 
+                    title: document.getElementById('task-title').value, 
+                    desc: document.getElementById('task-desc').value, 
+                    committee: commSelect.value,
+                    assigneeId: assigneeSelect.value,
+                    assigneeName: assigneeSelect.options[assigneeSelect.selectedIndex].text
+                });
+                
+                closeModal('task-modal');
+                e.target.reset();
+                commSelect.disabled = false; // Reset için aç
+                loadTabData('gorevler');
+                if (typeof AOS !== 'undefined') AOS.refresh();
+            } catch (err) {
+                console.error("Görev oluşturma hatası:", err);
+            }
+        });
+
+        function updateAssigneeList(committeeId) {
+            const assigneeSelect = document.getElementById('task-assignee');
+            if (!committeeId) {
+                assigneeSelect.innerHTML = '<option value="" disabled selected>Sorumlu Seçiniz...</option>';
+                return;
+            }
+            const allUsers = ForumDB.getUsers();
+            const committeeMembers = allUsers.filter(u => u.committees && u.committees.includes(committeeId));
+            
+            assigneeSelect.innerHTML = '<option value="" disabled selected>Sorumlu Seçiniz...</option>' + 
+                committeeMembers.map(m => `<option value="${m.id}">${m.fullName}</option>`).join('');
+        }
+
+        function deleteProject(pId) {
+            if (confirm('Bu projeyi silmek istediğine emin misin?')) {
+                ForumDB.deleteProject(pId);
+                loadTabData('projeler'); // Listeyi anında yenile
+            }
+        }
+
+        function deleteTask(tId) {
+            if (confirm('Bu görevi silmek istediğine emin misin?')) {
+                ForumDB.deleteTask(tId);
+                loadTabData('gorevler'); // Listeyi anında yenile
+            }
+        }
+
+        function updateTaskStatus(tId, status) {
+            ForumDB.updateTaskStatus(tId, status); loadTabData('gorevler');
+        }
+
+        function joinProject(pId) {
+            const user = ForumDB.getSession();
+            ForumDB.joinProjectRequest(pId, user.id, user.fullName);
+            ForumUI.notify('Katılma isteği başarıyla gönderildi!', 'success');
+            loadTabData('projeler');
+        }
+
+        // Forum Functions
+        function toggleLike(ideaId) {
+            const user = ForumDB.getSession();
+            ForumDB.toggleIdeaLike(ideaId, user.id);
+            loadTabData('forum');
+        }
+
+        function openComments(ideaId) {
+            const idea = ForumDB.getIdeas().find(i => Number(i.id) === Number(ideaId));
+            if (!idea) return;
+
+            document.getElementById('comment-idea-id').value = ideaId;
+            document.getElementById('comment-modal-title').textContent = idea.title;
+            
+            const container = document.getElementById('comments-container');
+            container.innerHTML = (idea.comments || []).length === 0 ? 
+                '<p class="text-center text-gray-400 py-10 italic">Henüz yorum yapılmamış. İlk yorumu sen yap!</p>' : 
+                idea.comments.map(c => `
+                    <div class="flex items-start space-x-4 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
+                        <div class="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center font-bold text-gray-400 shrink-0">${c.userName?.charAt(0) || 'F'}</div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <p class="text-xs font-black uppercase tracking-widest text-black">${c.userName || 'Anonim'}</p>
+                                <p class="text-[9px] text-gray-400 font-bold uppercase">${new Date(c.createdAt).toLocaleString()}</p>
+                            </div>
+                            <p class="text-sm text-gray-600 leading-relaxed">${c.text}</p>
+                        </div>
+                    </div>
+                `).join('');
+            
+            openModal('comment-modal');
+            lucide.createIcons();
+        }
+
+        document.getElementById('comment-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = ForumDB.getSession();
+            const ideaId = document.getElementById('comment-idea-id').value;
+            const text = document.getElementById('comment-text').value;
+
+            if (ForumDB.addIdeaComment(ideaId, { userId: user.id, userName: user.fullName, text })) {
+                document.getElementById('comment-text').value = '';
+                openComments(ideaId); // Yorumları tazele
+                loadTabData('forum'); // Forum listesindeki yorum sayısını tazele
+            }
+        });
+
+        // CH Management Functions
+        function updateAppStatusCH(id, status) {
+            ForumDB.updateApplicationStatus(id, status);
+            loadTabData('komite-yonetim');
+        }
+
+        function approveProjectCH(projectId) {
+            if (ForumDB.approveProject(projectId)) {
+                ForumUI.notify('Proje başarıyla onaylandı!', 'success');
+                loadTabData('komite-yonetim');
+            }
+        }
+
+        function rejectProjectCH(projectId) {
+            if (confirm('Bu proje önerisini reddetmek istediğine emin misin?')) {
+                if (ForumDB.rejectProject(projectId)) {
+                    ForumUI.notify('Proje önerisi reddedildi.', 'error');
+                    loadTabData('komite-yonetim');
+                }
+            }
+        }
+
+        function handleJoinRequestCH(projectId, userId, action) {
+            if (action === 'approve') {
+                if (ForumDB.approveProjectRequest(projectId, userId)) {
+                    ForumUI.notify('Kullanıcı projeye kabul edildi.', 'success');
+                }
+            } else {
+                if (ForumDB.rejectProjectRequest(projectId, userId)) {
+                    ForumUI.notify('İstek reddedildi.', 'error');
+                }
+            }
+            loadTabData('komite-yonetim');
+        }
+
+        function removeMemberCH(userId, committeeId) {
+            if (confirm('Bu üyeyi komiteden çıkarmak istediğine emin misin?')) {
+                const users = ForumDB.getUsers();
+                const index = users.findIndex(u => Number(u.id) === Number(userId));
+                if (index !== -1) {
+                    users[index].committees = users[index].committees.filter(c => c !== committeeId);
+                    if (users[index].committees.length === 0 && users[index].role === 'committee_member') {
+                        users[index].role = 'member';
+                    }
+                    localStorage.setItem('forum_users', JSON.stringify(users));
+                    loadTabData('komite-yonetim');
+                }
+            }
+        }
+
+        function quickFollow(targetId) {
+            const user = ForumDB.getSession();
+            if (ForumDB.followUser(user.id, targetId)) {
+                loadTabData('profil');
+            }
+        }
+
+        // Social Functions
+        function loadSocialData() {
+            const user = ForumDB.getSession();
+            const users = ForumDB.getUsers();
+            const currentUser = users.find(u => Number(u.id) === Number(user.id));
+            
+            // 1. Follow Suggestions
+            const suggestions = ForumDB.getFollowSuggestions(user.id);
+            document.getElementById('social-suggestions-list').innerHTML = suggestions.length === 0 ? '<p class="text-sm italic text-gray-400">Öneri yok.</p>' : suggestions.map(s => `
+                <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-accent transition-all duration-300">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center font-bold text-lg border-2 border-transparent group-hover:border-accent transition-all">${s.fullName.charAt(0)}</div>
+                        <div>
+                            <h4 class="font-bold text-sm group-hover:text-accent transition">${s.fullName}</h4>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">${s.grade}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center"><i data-lucide="tag" class="w-3 h-3 mr-1"></i> İlgi Alanları</p>
+                        <p class="text-xs text-gray-600 line-clamp-1">${s.interests || 'Genel'}</p>
+                        <div class="flex flex-wrap gap-1">
+                            ${(s.committees || []).map(c => `<span class="bg-accent/5 text-accent px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-tighter border border-accent/10">${c}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                        <a href="profile.html?id=${s.id}" class="text-[10px] font-bold text-gray-400 hover:text-accent transition uppercase tracking-widest">Profili Gör</a>
+                        <button onclick="socialFollowAction(${s.id}, 'follow')" class="bg-black text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition shadow-lg hover:scale-105 active:scale-95">Takip Et</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // 2. Following
+            const followingUsers = users.filter(u => currentUser.following.includes(u.id));
+            document.getElementById('social-following-list').innerHTML = followingUsers.length === 0 ? '<p class="text-sm italic text-gray-400">Henüz kimseyi takip etmiyorsun.</p>' : followingUsers.map(u => `
+                <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-accent transition-all duration-300">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center font-bold text-lg border-2 border-transparent group-hover:border-accent transition-all">${u.fullName.charAt(0)}</div>
+                        <div>
+                            <a href="profile.html?id=${u.id}" class="font-bold text-sm hover:text-accent transition block">${u.fullName}</a>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <span class="text-[8px] font-black uppercase text-gray-400 tracking-widest">${u.grade}</span>
+                                <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                <span class="text-[8px] font-black uppercase text-accent tracking-widest">${(u.followers || []).length} Takipçi</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <a href="profile.html?id=${u.id}" class="p-2 bg-gray-50 text-gray-400 hover:text-accent rounded-xl transition" title="Profile Git"><i data-lucide="external-link" class="w-4 h-4"></i></a>
+                        <button onclick="socialFollowAction(${u.id}, 'unfollow')" class="px-4 py-2 bg-gray-50 text-[10px] font-bold text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl uppercase tracking-widest transition">Takibi Bırak</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // 3. Followers
+            const followersUsers = users.filter(u => currentUser.followers.includes(u.id));
+            document.getElementById('social-followers-list').innerHTML = followersUsers.length === 0 ? '<p class="text-sm italic text-gray-400">Henüz takipçin yok.</p>' : followersUsers.map(u => {
+                const isFollowingBack = currentUser.following.includes(u.id);
+                return `
+                    <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-accent transition-all duration-300">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center font-bold text-lg border-2 border-transparent group-hover:border-accent transition-all">${u.fullName.charAt(0)}</div>
+                            <div>
+                                <a href="profile.html?id=${u.id}" class="font-bold text-sm hover:text-accent transition block">${u.fullName}</a>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="text-[8px] font-black uppercase text-gray-400 tracking-widest">${u.grade}</span>
+                                    <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                    <span class="text-[8px] font-black uppercase text-accent tracking-widest">${(u.followers || []).length} Takipçi</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="profile.html?id=${u.id}" class="p-2 bg-gray-50 text-gray-400 hover:text-accent rounded-xl transition" title="Profili Görüntüle"><i data-lucide="user" class="w-4 h-4"></i></a>
+                            ${isFollowingBack ? 
+                                '<span class="text-[8px] font-black uppercase text-gray-300 px-3 tracking-widest">Takipleşiyorsunuz</span>' : 
+                                `<button onclick="socialFollowAction(${u.id}, 'follow')" class="px-4 py-2 bg-accent text-white text-[10px] font-bold rounded-xl uppercase tracking-widest hover:scale-105 transition shadow-lg active:scale-95">Geri Takip Et</button>`
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function searchSocialUsers(query) {
+            const resultsDiv = document.getElementById('social-search-results');
+            const mainContent = document.getElementById('social-main-content');
+            const listDiv = document.getElementById('search-users-list');
+            
+            if (!query || query.length < 2) {
+                resultsDiv.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                return;
+            }
+
+            resultsDiv.classList.remove('hidden');
+            mainContent.classList.add('hidden');
+
+            const users = ForumDB.getUsers();
+            const currentUser = ForumDB.getSession();
+            const filtered = users.filter(u => 
+                u.id !== currentUser.id && (
+                    u.fullName.toLowerCase().includes(query.toLowerCase()) ||
+                    (u.interests || '').toLowerCase().includes(query.toLowerCase()) ||
+                    (u.committees || []).some(c => c.toLowerCase().includes(query.toLowerCase()))
+                )
+            );
+
+            listDiv.innerHTML = filtered.length === 0 ? '<p class="col-span-full text-center py-12 text-gray-400 italic">Sonuç bulunamadı.</p>' : filtered.map(u => {
+                const isFollowing = currentUser.following.includes(u.id);
+                return `
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center font-bold text-lg">${u.fullName.charAt(0)}</div>
+                            <div>
+                                <h4 class="font-bold text-sm">${u.fullName}</h4>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">${u.grade}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 mb-6">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">İlgi Alanları</p>
+                            <p class="text-xs text-gray-600">${u.interests || '-'}</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                            <a href="profile.html?id=${u.id}" class="text-[10px] font-bold text-gray-400 hover:text-accent transition uppercase tracking-widest">Profili Gör</a>
+                            <button onclick="socialFollowAction(${u.id}, '${isFollowing ? 'unfollow' : 'follow'}')" class="${isFollowing ? 'text-gray-400' : 'bg-black text-white'} px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-accent hover:text-white transition">
+                                ${isFollowing ? 'Takibi Bırak' : 'Takip Et'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function clearSocialSearch() {
+            document.getElementById('social-search-input').value = '';
+            document.getElementById('social-search-results').classList.add('hidden');
+            document.getElementById('social-main-content').classList.remove('hidden');
+        }
+
+        function socialFollowAction(targetId, action) {
+            const user = ForumDB.getSession();
+            if (action === 'follow') {
+                ForumDB.followUser(user.id, targetId);
+            } else {
+                ForumDB.unfollowUser(user.id, targetId);
+            }
+            loadSocialData();
+            // Search sayfasındaysa orayı da güncelle
+            const query = document.getElementById('social-search-input').value;
+            if (query) searchSocialUsers(query);
+        }
+
+        // Initialize
+        const session = ForumDB.getSession();
+        
+        // Sidebar Role Management
+        function updateSidebar() {
+            const isMember = session.role === 'member';
+            const isHead = session.role === 'committee_head';
+            const isAdmin = session.role === 'admin';
+
+            document.getElementById('nav-basvuru').classList.toggle('hidden', !isMember);
+            document.getElementById('nav-committee-head').classList.toggle('hidden', !isHead);
+            document.getElementById('admin-links').classList.toggle('hidden', !isAdmin);
+
+            // Update restricted tab icons if member
+            if (isMember) {
+                document.getElementById('nav-projeler').innerHTML = '<i data-lucide="lock" class="mr-3 w-4 h-4 text-gray-500"></i> Projeler';
+                document.getElementById('nav-gorevler').innerHTML = '<i data-lucide="lock" class="mr-3 w-4 h-4 text-gray-500"></i> Görevler';
+            }
+            lucide.createIcons();
+        }
+
+        document.getElementById('committee-app-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const appData = {
+                userId: session.id,
+                userName: session.fullName,
+                committeeId: document.getElementById('app-committee').value,
+                reason: document.getElementById('app-reason').value,
+                interests: document.getElementById('app-interests-input').value
+            };
+            
+            ForumDB.submitApplication(appData);
+            ForumUI.notify('Başvurunuz başarıyla alındı! Değerlendirme aşamasından sonra bilgilendirileceksiniz.', 'success');
+            showTab('profil');
+        });
+
+        document.getElementById('user-name').textContent = session.fullName;
+        document.getElementById('user-initials').textContent = session.fullName.charAt(0);
+        document.getElementById('user-role-label').textContent = session.role === 'admin' ? 'Yönetici' : (session.role === 'committee_head' ? 'Komite Başkanı' : 'Üye');
+        if (session.role === 'admin') document.getElementById('admin-links').classList.remove('hidden');
+        if (session.role === 'committee_head') document.getElementById('nav-committee-head').classList.remove('hidden');
+        updateSidebar();
+        showTab('profil');
+        lucide.createIcons();
+    </script>
+</body></html>

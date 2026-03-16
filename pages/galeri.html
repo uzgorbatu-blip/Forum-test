@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri | Forum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="../assets/js/auth.js"></script><script src="../assets/js/main.js"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#000000', secondary: '#FFFFFF', accent: '#E31E24' }, fontFamily: { sans: ['Inter', 'sans-serif'] }, } } }</script>
+</head>
+<body class="antialiased bg-gray-50">
+    <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex-shrink-0 flex items-center"><a href="../index.html" class="text-2xl font-extrabold tracking-tighter">FORUM<span class="text-accent">.</span></a></div>
+                <div class="hidden md:flex space-x-8 text-sm font-semibold uppercase tracking-wider">
+                    <a href="../index.html" class="hover:text-accent transition">Ana Sayfa</a>
+                    <a href="hakkimizda.html" class="hover:text-accent transition">Hakkımızda</a>
+                    <a href="komiteler.html" class="hover:text-accent transition">Komiteler</a>
+                    <a href="projeler.html" class="hover:text-accent transition">Projeler</a>
+                    <a href="etkinlikler.html" class="hover:text-accent transition">Etkinlikler</a>
+                    <a href="iletisim.html" class="hover:text-accent transition">İletişim</a>
+                </div>
+                <div class="hidden md:block" id="navbar-auth-links">
+                    <div class="flex items-center space-x-4"><a href="login.html" class="text-sm font-bold uppercase tracking-widest hover:text-accent transition">Giriş</a><a href="register.html" class="bg-black text-white px-5 py-2.5 rounded-md hover:bg-accent transition text-sm font-bold uppercase tracking-widest">Kayıt</a></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <section class="pt-40 pb-20 bg-black text-white text-center" data-aos="fade-up">
+        <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter uppercase">Galeri</h1>
+        <p class="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">Forum ailesinin en özel anları.</p>
+    </section>
+    <section class="py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div class="aspect-square bg-gray-200 rounded-2xl flex items-center justify-center font-black text-white text-2xl" data-aos="zoom-in">FORUM</div>
+                <div class="aspect-square bg-black rounded-2xl flex items-center justify-center font-black text-white text-2xl" data-aos="zoom-in" data-aos-delay="100">FORUM</div>
+                <div class="aspect-square bg-accent rounded-2xl flex items-center justify-center font-black text-white text-2xl" data-aos="zoom-in" data-aos-delay="200">FORUM</div>
+                <div class="aspect-square bg-gray-100 rounded-2xl flex items-center justify-center font-black text-black text-2xl" data-aos="zoom-in" data-aos-delay="300">FORUM</div>
+            </div>
+        </div>
+    </section>
+    <footer class="bg-black text-white py-12 text-center">
+        <a href="../index.html" class="text-2xl font-black tracking-tighter mb-4 block">FORUM<span class="text-accent">.</span></a>
+        <p class="text-gray-500 text-xs uppercase tracking-widest">&copy; 2024 Forum. Tüm Hakları Saklıdır.</p>
+    </footer>
+    <script>lucide.createIcons(); AOS.init({ duration: 800, once: true });</script>
+</body></html>

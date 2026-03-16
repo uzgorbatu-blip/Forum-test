@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proje Detayı | Forum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="../assets/js/auth.js"></script><script src="../assets/js/main.js"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#000000', secondary: '#FFFFFF', accent: '#E31E24' }, fontFamily: { sans: ['Inter', 'sans-serif'] }, } } }</script>
+</head>
+<body class="antialiased bg-gray-50">
+    <script>if (!ForumDB.getSession()) window.location.href = 'login.html';</script>
+
+    <div class="min-h-screen flex flex-col md:flex-row">
+        <!-- Sidebar -->
+        <aside class="w-full md:w-64 bg-black text-white flex flex-col fixed h-full z-20">
+            <div class="p-8"><a href="../index.html" class="text-2xl font-black tracking-tighter block">FORUM<span class="text-accent">.</span></a></div>
+            <nav class="flex-1 px-4 space-y-2">
+                <a href="dashboard.html" class="w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center"><i data-lucide="arrow-left" class="mr-3 w-4 h-4"></i> Panele Dön</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 md:ml-64 p-4 md:p-12">
+            <div id="project-header" class="mb-12" data-aos="fade-down">
+                <div class="flex items-center space-x-2 mb-4">
+                    <span id="p-category" class="bg-accent text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest">Kategori</span>
+                    <span id="p-status" class="bg-black text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest">Aktif</span>
+                </div>
+                <h1 id="p-title" class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">Proje Adı</h1>
+                <p id="p-desc" class="text-gray-500 text-lg max-w-3xl leading-relaxed mb-8">Proje açıklaması buraya gelecek.</p>
+                
+                <div id="join-section" class="mb-12">
+                    <!-- Join Project Button or Status -->
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-12">
+                    <!-- 3️⃣ Timeline Section -->
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100" data-aos="fade-right">
+                        <h3 class="text-xl font-black mb-8 uppercase tracking-tight flex items-center"><i data-lucide="clock" class="mr-2 text-accent"></i> Proje Zaman Çizelgesi</h3>
+                        <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center space-y-8 md:space-y-0" id="timeline-container">
+                            <!-- Dynamic Timeline -->
+                        </div>
+                    </div>
+
+                    <!-- 1️⃣ & 2️⃣ Tasks Section -->
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100" data-aos="fade-right">
+                        <div class="flex justify-between items-center mb-8">
+                            <h3 class="text-xl font-black uppercase tracking-tight flex items-center"><i data-lucide="check-square" class="mr-2 text-accent"></i> Görev Listesi</h3>
+                            <div class="text-right">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">İlerleme</p>
+                                <p id="p-progress" class="text-xl font-black text-accent">0%</p>
+                            </div>
+                        </div>
+                        <div id="project-lead-controls" class="hidden mb-6">
+                            <button onclick="openModal('task-modal')" class="bg-black text-white px-6 py-2.5 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-accent transition">+ Görev Ekle</button>
+                        </div>
+                        <div class="space-y-4" id="tasks-container">
+                            <!-- Dynamic Tasks -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <!-- 4️⃣ File Sharing Section -->
+                    <div class="bg-black text-white p-8 rounded-3xl shadow-xl" data-aos="fade-left">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-black uppercase tracking-tight text-accent flex items-center"><i data-lucide="folder" class="mr-2"></i> Dosyalar</h3>
+                            <button onclick="openModal('file-modal')" class="text-white hover:text-accent transition"><i data-lucide="plus-circle"></i></button>
+                        </div>
+                        <div id="files-container" class="space-y-4">
+                            <!-- Dynamic Files -->
+                        </div>
+                    </div>
+
+                    <!-- Team Members -->
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100" data-aos="fade-left">
+                        <h3 class="text-lg font-black mb-6 uppercase tracking-tight">Proje Ekibi</h3>
+                        <div id="team-container" class="space-y-4">
+                            <!-- Dynamic Team -->
+                        </div>
+                    </div>
+
+                    <!-- Join Requests (Visible to Lead) -->
+                    <div id="requests-panel" class="hidden bg-white p-8 rounded-3xl shadow-sm border border-gray-100" data-aos="fade-left">
+                        <h3 class="text-lg font-black mb-6 uppercase tracking-tight text-accent">Katılım İstekleri</h3>
+                        <div id="requests-container" class="space-y-6">
+                            <!-- Dynamic Requests -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="join-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white max-w-lg w-full rounded-[2rem] p-10 shadow-2xl" data-aos="zoom-in">
+            <h3 class="text-2xl font-black mb-2 uppercase tracking-tight">Projeye Katıl</h3>
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-8">Ekibin bir parçası olmak için başvurunu ilet.</p>
+            <form id="join-form" class="space-y-6">
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Hangi alanda katkı sağlayabilirsin?</label>
+                    <input id="j-role" placeholder="Örn: Tasarım, Yazılım, Sunum..." required class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-accent outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Neden bu projede yer almak istiyorsun?</label>
+                    <textarea id="j-message" placeholder="Motivasyonunu kısaca açıkla..." required rows="4" class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-accent outline-none transition-all resize-none"></textarea>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeModal('join-modal')" class="flex-1 py-4 border-2 border-gray-100 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-50 transition-all">İptal</button>
+                    <button type="submit" class="flex-1 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-accent transition-all shadow-xl hover:scale-[1.02] active:scale-95 duration-300">İsteği Gönder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="task-modal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white max-w-lg w-full rounded-3xl p-8 shadow-2xl">
+            <h3 class="text-xl font-black mb-6 uppercase tracking-tight">Yeni Görev</h3>
+            <form id="task-form" class="space-y-4">
+                <input id="t-title" placeholder="Görev Başlığı" required class="w-full px-4 py-3 border rounded-xl">
+                <textarea id="t-desc" placeholder="Açıklama" required class="w-full px-4 py-3 border rounded-xl"></textarea>
+                <select id="t-assignee" class="w-full px-4 py-3 border rounded-xl">
+                    <!-- Team members option -->
+                </select>
+                <input type="date" id="t-deadline" class="w-full px-4 py-3 border rounded-xl">
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeModal('task-modal')" class="flex-1 py-3 border rounded-xl font-bold uppercase tracking-widest text-xs">İptal</button>
+                    <button type="submit" class="flex-1 py-3 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent">Ekle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="file-modal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white max-w-lg w-full rounded-3xl p-8 shadow-2xl">
+            <h3 class="text-xl font-black mb-6 uppercase tracking-tight">Dosya Paylaş</h3>
+            <form id="file-form" class="space-y-4">
+                <input id="f-name" placeholder="Dosya Adı (Örn: Proje Sunumu)" required class="w-full px-4 py-3 border rounded-xl">
+                <select id="f-type" class="w-full px-4 py-3 border rounded-xl">
+                    <option value="pdf">PDF</option>
+                    <option value="img">Görsel</option>
+                    <option value="doc">Doküman</option>
+                    <option value="ppt">Sunum</option>
+                </select>
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeModal('file-modal')" class="flex-1 py-3 border rounded-xl font-bold uppercase tracking-widest text-xs">İptal</button>
+                    <button type="submit" class="flex-1 py-3 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent">Yükle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('id');
+        const user = ForumDB.getSession();
+
+        function loadProject() {
+            const project = ForumDB.getProjects().find(p => Number(p.id) === Number(projectId));
+            if (!project) { window.location.href = 'dashboard.html'; return; }
+
+            // Header
+            document.getElementById('p-title').textContent = project.title;
+            document.getElementById('p-desc').textContent = project.description;
+            document.getElementById('p-category').textContent = project.category;
+            
+            // Permissions & Join Logic
+            const isMember = project.members.includes(Number(user.id));
+            const isLead = Number(project.creatorId) === Number(user.id) || user.role === 'admin' || (user.role === 'committee_head' && user.leadOf === project.category);
+            const isInCommittee = user.committees?.includes(project.category) || user.role === 'admin';
+            const existingRequest = project.requests?.find(r => Number(r.userId) === Number(user.id));
+
+            const joinSection = document.getElementById('join-section');
+            if (isLead) {
+                document.getElementById('project-lead-controls').classList.remove('hidden');
+                document.getElementById('requests-panel').classList.remove('hidden');
+                loadRequests(project);
+            }
+
+            if (isMember) {
+                joinSection.innerHTML = `<span class="bg-green-100 text-green-700 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] inline-flex items-center shadow-sm"><i data-lucide="check-circle" class="w-4 h-4 mr-2"></i> Proje Üyesisiniz</span>`;
+            } else if (existingRequest) {
+                const statusColors = { pending: 'bg-yellow-50 text-yellow-600', rejected: 'bg-red-50 text-red-600' };
+                const statusLabels = { pending: 'Başvuru Bekliyor', rejected: 'Başvuru Reddedildi' };
+                joinSection.innerHTML = `<span class="${statusColors[existingRequest.status]} px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] inline-flex items-center border border-current/10">${statusLabels[existingRequest.status]}</span>`;
+            } else if (isInCommittee) {
+                joinSection.innerHTML = `<button onclick="openModal('join-modal')" class="bg-black text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-accent transition-all shadow-xl hover:scale-105 active:scale-95 duration-300">Projeye Katıl</button>`;
+            } else {
+                joinSection.innerHTML = `
+                    <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 flex items-start space-x-4 max-w-xl">
+                        <i data-lucide="info" class="w-5 h-5 text-gray-400 mt-0.5"></i>
+                        <p class="text-sm text-gray-500 font-medium leading-relaxed">Bu projeye katılabilmek için <strong>${project.category.toUpperCase()}</strong> komitesinin üyesi olmanız gerekir.</p>
+                    </div>
+                `;
+            }
+
+            // Timeline
+            const tlContainer = document.getElementById('timeline-container');
+            tlContainer.innerHTML = project.timeline.map((step, idx) => `
+                <div class="flex flex-col items-center relative z-10 text-center">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 mb-2 ${step.status === 'completed' ? 'bg-accent border-accent text-white' : step.status === 'current' ? 'border-accent text-accent' : 'bg-white border-gray-200 text-gray-300'}">
+                        ${step.status === 'completed' ? '<i data-lucide="check" class="w-4 h-4"></i>' : idx + 1}
+                    </div>
+                    <p class="text-[10px] font-black uppercase tracking-widest ${step.status === 'pending' ? 'text-gray-300' : 'text-black'}">${step.label}</p>
+                </div>
+            `).join('');
+
+            // Tasks & Progress
+            const totalTasks = project.tasks?.length || 0;
+            const completedTasks = project.tasks?.filter(t => t.status === 'tamamlandı').length || 0;
+            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            document.getElementById('p-progress').textContent = progress + '%';
+
+            const tasksContainer = document.getElementById('tasks-container');
+            tasksContainer.innerHTML = (project.tasks || []).map(t => `
+                <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                        <h4 class="font-bold text-lg">${t.title}</h4>
+                        <p class="text-xs text-gray-500">${t.desc}</p>
+                        <div class="flex items-center space-x-4 mt-4">
+                            <span class="text-[8px] font-black uppercase tracking-widest text-gray-400">Atanan: ${t.assigneeName}</span>
+                            <span class="text-[8px] font-black uppercase tracking-widest text-accent">Deadline: ${t.deadline || '-'}</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 md:mt-0 w-full md:w-auto">
+                        <select onchange="updateStatus(${t.id}, this.value)" class="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 text-[10px] font-bold uppercase outline-none" ${!isLead ? 'disabled' : ''}>
+                            <option value="yapılacak" ${t.status === 'yapılacak' ? 'selected' : ''}>Yapılacak</option>
+                            <option value="yapılıyor" ${t.status === 'yapılıyor' ? 'selected' : ''}>Yapılıyor</option>
+                            <option value="tamamlandı" ${t.status === 'tamamlandı' ? 'selected' : ''}>Tamamlandı</option>
+                        </select>
+                    </div>
+                </div>
+            `).join('');
+
+            // Files
+            const filesContainer = document.getElementById('files-container');
+            filesContainer.innerHTML = (project.files || []).map(f => `
+                <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition">
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="file-text" class="text-accent w-5 h-5"></i>
+                        <div>
+                            <p class="text-xs font-bold">${f.name}</p>
+                            <p class="text-[8px] text-gray-500 uppercase">${f.uploaderName} • ${new Date(f.uploadedAt).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <button class="text-gray-500 hover:text-white"><i data-lucide="download" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
+
+            // Team & Task Assignee Options
+            const teamContainer = document.getElementById('team-container');
+            const assigneeSelect = document.getElementById('t-assignee');
+            const allUsers = ForumDB.getUsers();
+            
+            // Map project member IDs to user objects for the Team list
+            const team = (project.members || []).map(mid => allUsers.find(u => Number(u.id) === Number(mid))).filter(Boolean);
+            
+            // Populate Team List UI (Existing project members)
+            teamContainer.innerHTML = team.map(m => `
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-[10px] font-bold">${m.fullName.charAt(0)}</div>
+                    <div>
+                        <p class="text-xs font-bold">${m.fullName}</p>
+                        <p class="text-[8px] text-gray-400 uppercase">${m.grade || 'Üye'}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Populate Task Assignee Dropdown (All members of the project's committee)
+            const committeeMembers = allUsers.filter(u => u.committees?.includes(project.category));
+            
+            assigneeSelect.innerHTML = '<option value="" disabled selected>Sorumlu Seçiniz...</option>' + 
+                committeeMembers.map(m => `<option value="${m.id}">${m.fullName}</option>`).join('');
+
+            lucide.createIcons();
+            if (typeof AOS !== 'undefined') AOS.refresh();
+        }
+
+        function updateStatus(taskId, status) {
+            if (ForumDB.updateProjectTaskStatus(projectId, taskId, status)) {
+                loadProject();
+            }
+        }
+
+        function loadRequests(project) {
+            const container = document.getElementById('requests-container');
+            const pendingRequests = (project.requests || []).filter(r => r.status === 'pending');
+            
+            container.innerHTML = pendingRequests.length === 0 ? 
+                '<p class="text-xs italic text-gray-400">Yeni katılım isteği bulunmuyor.</p>' : 
+                pendingRequests.map(r => `
+                    <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-bold text-sm text-black">${r.userName}</p>
+                                <p class="text-[8px] font-black uppercase text-accent tracking-widest">${r.role}</p>
+                            </div>
+                            <span class="text-[8px] font-bold text-gray-400 uppercase">${new Date(r.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 leading-relaxed italic">"${r.message}"</p>
+                        <div class="flex space-x-3 pt-2">
+                            <button onclick="handleRequest(${r.userId}, 'approve')" class="flex-1 py-2 bg-black text-white rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-green-600 transition-all shadow-md">Kabul Et</button>
+                            <button onclick="handleRequest(${r.userId}, 'reject')" class="flex-1 py-2 bg-white text-gray-400 border border-gray-200 rounded-xl text-[8px] font-black uppercase tracking-widest hover:text-red-500 hover:border-red-200 transition-all">Reddet</button>
+                        </div>
+                    </div>
+                `).join('');
+            lucide.createIcons();
+        }
+
+        function handleRequest(userId, action) {
+            if (action === 'approve') {
+                ForumDB.approveProjectRequest(projectId, userId);
+                ForumUI.notify('Kullanıcı projeye eklendi.', 'success');
+            } else {
+                ForumDB.rejectProjectRequest(projectId, userId);
+                ForumUI.notify('İstek reddedildi.', 'success');
+            }
+            loadProject();
+        }
+
+        document.getElementById('join-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const role = document.getElementById('j-role').value;
+            const message = document.getElementById('j-message').value;
+            
+            if (ForumDB.joinProjectRequest(projectId, user.id, user.fullName, message, role)) {
+                ForumUI.notify('Katılım isteğin iletildi!', 'success');
+                closeModal('join-modal');
+                loadProject();
+            }
+        });
+
+        document.getElementById('task-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            try {
+                const assigneeSelect = document.getElementById('t-assignee');
+                if (!assigneeSelect.value) {
+                    ForumUI.notify('Lütfen bir sorumlu seçiniz.', 'error');
+                    return;
+                }
+
+                const taskData = {
+                    title: document.getElementById('t-title').value,
+                    desc: document.getElementById('t-desc').value,
+                    assigneeId: Number(assigneeSelect.value),
+                    assigneeName: assigneeSelect.options[assigneeSelect.selectedIndex].text,
+                    deadline: document.getElementById('t-deadline').value
+                };
+
+                const newTask = ForumDB.addProjectTask(projectId, taskData);
+                if (newTask) {
+                    closeModal('task-modal');
+                    e.target.reset();
+                    ForumUI.notify('Görev başarıyla eklendi!', 'success');
+                    loadProject();
+                } else {
+                    ForumUI.notify('Görev eklenirken bir hata oluştu.', 'error');
+                }
+            } catch (err) {
+                console.error("Görev ekleme hatası:", err);
+            }
+        });
+
+        document.getElementById('file-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            ForumDB.addProjectFile(projectId, {
+                name: document.getElementById('f-name').value,
+                type: document.getElementById('f-type').value,
+                uploaderId: user.id,
+                uploaderName: user.fullName
+            });
+            closeModal('file-modal');
+            e.target.reset();
+            loadProject();
+        });
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProject();
+            AOS.init({ duration: 800, once: true });
+        });
+    </script>
+</body></html>
