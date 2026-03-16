@@ -37,6 +37,56 @@ const ForumDB = {
         { level: 6, minXP: 2000, title: 'Topluluk Elçisi', badge: 'ambassador' }
     ],
 
+    // --- Tüm Forum Verisini Yedekleme / Geri Yükleme ---
+    exportAllData: () => {
+        const keys = [
+            'forum_users',
+            'forum_projects',
+            'forum_tasks',
+            'forum_trash',
+            'forum_ideas',
+            'forum_applications',
+            'forum_announcements',
+            'forum_custom_badges',
+            'forum_bans',
+            'forum_restrictions',
+            'forum_reports',
+            'forum_mod_logs'
+        ];
+        const snapshot = {};
+        keys.forEach(k => {
+            const raw = localStorage.getItem(k);
+            if (raw !== null && raw !== undefined) {
+                snapshot[k] = raw;
+            }
+        });
+        return JSON.stringify({
+            createdAt: new Date().toISOString(),
+            version: 'v1',
+            data: snapshot
+        }, null, 2);
+    },
+
+    importAllData: (jsonString) => {
+        if (!jsonString) return false;
+        let payload;
+        try {
+            payload = JSON.parse(jsonString);
+        } catch {
+            return false;
+        }
+        const data = payload.data || payload;
+        if (!data || typeof data !== 'object') return false;
+        Object.entries(data).forEach(([key, value]) => {
+            if (typeof value === 'string') {
+                localStorage.setItem(key, value);
+            } else {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
+        });
+        return true;
+    },
+
     // --- Moderasyon: veri yardımcıları ---
     getBans: () => {
         try {
