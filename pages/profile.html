@@ -78,6 +78,34 @@
                             </div>
                         </div>
 
+                        <!-- Streak Info -->
+                        <div class="mt-8 px-4 pb-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="flame" class="w-4 h-4 text-accent"></i>
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Günlük Seri</p>
+                                </div>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest" id="profile-streak-last">Son Aktivite: -</p>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="bg-black text-white rounded-2xl p-4 flex flex-col items-center justify-center">
+                                    <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Aktif Seri</p>
+                                    <p class="text-2xl font-black" id="profile-streak-current">0</p>
+                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Gün</p>
+                                </div>
+                                <div class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center justify-center">
+                                    <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">En Uzun Seri</p>
+                                    <p class="text-2xl font-black" id="profile-streak-best">0</p>
+                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Gün</p>
+                                </div>
+                                <div class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center justify-center">
+                                    <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Hedef</p>
+                                    <p class="text-2xl font-black text-accent">🔥</p>
+                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">3 / 7 / 30</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- XP Progress Bar (Header) -->
                         <div class="mt-8 px-4 pb-4">
                             <div class="flex items-center justify-between mb-3">
@@ -168,6 +196,14 @@
             document.getElementById('profile-xp-progress-text').textContent = `${xpInfo.xp} / ${xpInfo.nextLevelXP || 'Max'} XP`;
             document.getElementById('profile-xp-progress-bar').style.width = `${xpInfo.progress}%`;
 
+            // Streak Stats
+            const streakInfo = ForumDB.getUserStreakInfo(targetUser.id);
+            document.getElementById('profile-streak-current').textContent = streakInfo.current || 0;
+            document.getElementById('profile-streak-best').textContent = streakInfo.best || 0;
+            document.getElementById('profile-streak-last').textContent = streakInfo.lastActivityAt
+                ? `Son Aktivite: ${new Date(streakInfo.lastActivityAt).toLocaleDateString()}`
+                : 'Son Aktivite: -';
+
             // Interests
             const interestsDiv = document.getElementById('profile-interests');
             const interests = (targetUser.interests || '').split(',').map(i => i.trim()).filter(i => i);
@@ -194,11 +230,25 @@
                 `;
             } else {
                 const isFollowing = (session.following || []).some(id => Number(id) === Number(targetUser.id));
+                const isAdmin = session.role === 'admin';
+                let adminControls = '';
+                if (isAdmin) {
+                    adminControls = `
+                        <div class="mt-3 flex flex-wrap gap-1 justify-center md:justify-start text-[9px]">
+                            <button onclick="profileWarnUser(${targetUser.id})" class="px-3 py-1 rounded bg-amber-50 text-amber-600 font-black uppercase tracking-widest hover:bg-amber-100">Uyar</button>
+                            <button onclick="profileBanUser(${targetUser.id}, 1)" class="px-3 py-1 rounded bg-gray-100 text-gray-700 font-black uppercase tracking-widest hover:bg-gray-200">Ban 24s</button>
+                            <button onclick="profileBanUser(${targetUser.id}, 7)" class="px-3 py-1 rounded bg-gray-100 text-gray-700 font-black uppercase tracking-widest hover:bg-gray-200">Ban 7g</button>
+                            <button onclick="profileBanUser(${targetUser.id}, 30)" class="px-3 py-1 rounded bg-gray-100 text-gray-700 font-black uppercase tracking-widest hover:bg-gray-200">Ban 30g</button>
+                            <button onclick="profileBanUser(${targetUser.id}, 'permanent')" class="px-3 py-1 rounded bg-red-100 text-red-600 font-black uppercase tracking-widest hover:bg-red-200">Kalıcı Ban</button>
+                        </div>
+                    `;
+                }
                 actionsDiv.innerHTML = `
                     <button onclick="toggleFollow(${targetUser.id}, ${isFollowing})" class="${isFollowing ? 'bg-gray-100 text-black border border-gray-200' : 'bg-accent text-white'} px-10 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition shadow-xl active:scale-95 duration-300">
                         ${isFollowing ? 'Takibi Bırak' : 'Takip Et'}
                     </button>
                     <button class="bg-black text-white p-3 rounded-2xl hover:bg-accent transition shadow-xl duration-300"><i data-lucide="mail" class="w-5 h-5"></i></button>
+                    ${adminControls}
                 `;
             }
 
@@ -239,9 +289,164 @@
             loadProfile();
         }
 
+        // --- Moderasyon Aksiyonları (Profil) ---
+        let currentBanTargetId = null;
+        let currentBanDuration = null;
+        let currentWarnTargetId = null;
+
+        function openBanModal(targetId, duration, label) {
+            currentBanTargetId = targetId;
+            currentBanDuration = duration;
+            const session = ForumDB.getSession();
+            if (!session || session.role !== 'admin') return;
+
+            const modal = document.getElementById('ban-modal');
+            const labelEl = document.getElementById('ban-modal-label');
+            const infoEl = document.getElementById('ban-modal-info');
+            const reasonInput = document.getElementById('ban-modal-reason');
+
+            labelEl.textContent = 'Ban İşlemini Onayla';
+            infoEl.textContent = `${label} uygulamak istediğine emin misin? Bu işlem seçilen süre boyunca kullanıcının platform erişimini kısıtlar.`;
+            reasonInput.value = 'Platform kurallarını ihlal etmek';
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeBanModal() {
+            const modal = document.getElementById('ban-modal');
+            modal.classList.add('hidden');
+            currentBanTargetId = null;
+            currentBanDuration = null;
+        }
+
+        function submitBanModal() {
+            const session = ForumDB.getSession();
+            if (!session || session.role !== 'admin') return;
+            if (!currentBanTargetId) {
+                closeBanModal();
+                return;
+            }
+            const reasonInput = document.getElementById('ban-modal-reason');
+            const reason = (reasonInput.value || '').trim() || 'Platform kurallarını ihlal etmek';
+
+            ForumDB.banUser(currentBanTargetId, currentBanDuration, reason, session.id);
+            closeBanModal();
+            loadProfile();
+        }
+
+        function profileWarnUser(targetId) {
+            const session = ForumDB.getSession();
+            if (!session || session.role !== 'admin') return;
+            currentWarnTargetId = targetId;
+
+            const modal = document.getElementById('warn-modal');
+            const titleEl = document.getElementById('warn-modal-title');
+            const infoEl = document.getElementById('warn-modal-info');
+            const reasonInput = document.getElementById('warn-modal-reason');
+
+            titleEl.textContent = 'Kullanıcıyı Uyar';
+            infoEl.textContent = 'Bu kullanıcıya resmi bir uyarı göndermek üzeresin. Mesaj, kullanıcının bildirim kutusunda görünecektir.';
+            reasonInput.value = 'Platform kurallarını ihlal ettiğiniz için uyarı aldınız.';
+
+            modal.classList.remove('hidden');
+        }
+
+        function profileBanUser(targetId, duration) {
+            const session = ForumDB.getSession();
+            if (!session || session.role !== 'admin') return;
+            let label;
+            if (duration === 'permanent') label = 'kalıcı ban';
+            else if (duration === 1) label = '24 saatlik ban';
+            else label = `${duration} günlük ban`;
+            openBanModal(targetId, duration, label);
+        }
+
+        function closeWarnModal() {
+            const modal = document.getElementById('warn-modal');
+            modal.classList.add('hidden');
+            currentWarnTargetId = null;
+        }
+
+        function submitWarnModal() {
+            const session = ForumDB.getSession();
+            if (!session || session.role !== 'admin') return;
+            if (!currentWarnTargetId) {
+                closeWarnModal();
+                return;
+            }
+            const reasonInput = document.getElementById('warn-modal-reason');
+            const reason = (reasonInput.value || '').trim() || 'Platform kurallarını ihlal ettiğiniz için uyarı aldınız.';
+
+            ForumDB.warnUser(currentWarnTargetId, reason, session.id);
+            closeWarnModal();
+            loadProfile();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadProfile();
             AOS.init({ duration: 800, once: true });
         });
     </script>
+
+    <!-- Uyarı Modalı -->
+    <div id="warn-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="w-full max-w-md mx-4 rounded-2xl bg-gray-900 text-white shadow-2xl border border-amber-400/20">
+            <div class="px-6 pt-5 pb-4 border-b border-white/5 flex items-center justify-between">
+                <div>
+                    <p id="warn-modal-title" class="text-sm font-semibold tracking-wide uppercase text-amber-300"></p>
+                    <p class="text-[11px] text-gray-400 mt-1">Uyarılar, kullanıcıyı bilgilendirmek ve davranışı düzeltmek için kullanılır.</p>
+                </div>
+                <button onclick="closeWarnModal()" class="p-1.5 rounded-full hover:bg-white/5 text-gray-400 hover:text-white transition">
+                    ✕
+                </button>
+            </div>
+            <div class="px-6 py-4 space-y-4">
+                <p id="warn-modal-info" class="text-sm text-gray-200"></p>
+                <div>
+                    <label for="warn-modal-reason" class="block text-xs font-medium text-gray-400 mb-1.5">Uyarı Mesajı</label>
+                    <textarea id="warn-modal-reason" rows="3" class="w-full rounded-xl bg-gray-800/80 border border-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 text-sm px-3 py-2 resize-none placeholder:text-gray-500 transition" placeholder="Kısa ve net bir açıklama yaz."></textarea>
+                    <p class="mt-1 text-[11px] text-gray-500">Bu metin aynen kullanıcının bildirim kartında görünecektir.</p>
+                </div>
+            </div>
+            <div class="px-6 pb-5 pt-3 flex items-center justify-end gap-3 border-t border-white/5 bg-gray-900/80 rounded-b-2xl">
+                <button onclick="closeWarnModal()" class="px-4 py-2 rounded-xl text-xs font-semibold tracking-wide bg-gray-800 text-gray-200 hover:bg-gray-700 transition">
+                    İptal
+                </button>
+                <button onclick="submitWarnModal()" class="px-4 py-2 rounded-xl text-xs font-semibold tracking-wide bg-amber-400 hover:bg-amber-500 text-black shadow-lg shadow-amber-400/30 transition">
+                    Uyarıyı Gönder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ban Onay Modalı -->
+    <div id="ban-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="w-full max-w-md mx-4 rounded-2xl bg-gray-900 text-white shadow-2xl border border-white/5">
+            <div class="px-6 pt-5 pb-4 border-b border-white/5 flex items-center justify-between">
+                <div>
+                    <p id="ban-modal-label" class="text-sm font-semibold tracking-wide uppercase text-purple-300"></p>
+                    <p class="text-[11px] text-gray-400 mt-1">Bu işlem kullanıcı güvenliği ve topluluk kuralları için uygulanır.</p>
+                </div>
+                <button onclick="closeBanModal()" class="p-1.5 rounded-full hover:bg-white/5 text-gray-400 hover:text-white transition">
+                    ✕
+                </button>
+            </div>
+            <div class="px-6 py-4 space-y-4">
+                <p id="ban-modal-info" class="text-sm text-gray-200"></p>
+                <div>
+                    <label for="ban-modal-reason" class="block text-xs font-medium text-gray-400 mb-1.5">Ban Sebebi</label>
+                    <textarea id="ban-modal-reason" rows="3" class="w-full rounded-xl bg-gray-800/80 border border-gray-700 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/50 text-sm px-3 py-2 resize-none placeholder:text-gray-500 transition" placeholder="Kısa ve net bir açıklama yaz."></textarea>
+                    <p class="mt-1 text-[11px] text-gray-500">Kullanıcıya giden bildirimde bu mesaj gösterilecektir.</p>
+                </div>
+            </div>
+            <div class="px-6 pb-5 pt-3 flex items-center justify-end gap-3 border-t border-white/5 bg-gray-900/80 rounded-b-2xl">
+                <button onclick="closeBanModal()" class="px-4 py-2 rounded-xl text-xs font-semibold tracking-wide bg-gray-800 text-gray-200 hover:bg-gray-700 transition">
+                    İptal
+                </button>
+                <button onclick="submitBanModal()" class="px-4 py-2 rounded-xl text-xs font-semibold tracking-wide bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 transition">
+                    Ban Uygula
+                </button>
+            </div>
+        </div>
+    </div>
 </body></html>

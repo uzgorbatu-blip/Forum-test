@@ -37,6 +37,250 @@ const ForumDB = {
         { level: 6, minXP: 2000, title: 'Topluluk Elçisi', badge: 'ambassador' }
     ],
 
+    // --- Moderasyon: veri yardımcıları ---
+    getBans: () => {
+        try {
+            const list = JSON.parse(localStorage.getItem('forum_bans')) || [];
+            return Array.isArray(list) ? list : [];
+        } catch {
+            localStorage.removeItem('forum_bans');
+            return [];
+        }
+    },
+    saveBans: (bans) => localStorage.setItem('forum_bans', JSON.stringify(bans || [])),
+
+    getRestrictions: () => {
+        try {
+            const list = JSON.parse(localStorage.getItem('forum_restrictions')) || [];
+            return Array.isArray(list) ? list : [];
+        } catch {
+            localStorage.removeItem('forum_restrictions');
+            return [];
+        }
+    },
+    saveRestrictions: (r) => localStorage.setItem('forum_restrictions', JSON.stringify(r || [])),
+
+    getReports: () => {
+        try {
+            const list = JSON.parse(localStorage.getItem('forum_reports')) || [];
+            return Array.isArray(list) ? list : [];
+        } catch {
+            localStorage.removeItem('forum_reports');
+            return [];
+        }
+    },
+    saveReports: (r) => localStorage.setItem('forum_reports', JSON.stringify(r || [])),
+
+    getModLogs: () => {
+        try {
+            const list = JSON.parse(localStorage.getItem('forum_mod_logs')) || [];
+            return Array.isArray(list) ? list : [];
+        } catch {
+            localStorage.removeItem('forum_mod_logs');
+            return [];
+        }
+    },
+    saveModLogs: (logs) => localStorage.setItem('forum_mod_logs', JSON.stringify(logs || [])),
+
+    logModAction: ({ adminId, targetUserId, action, details }) => {
+        const logs = ForumDB.getModLogs();
+        logs.unshift({
+            id: Date.now(),
+            adminId: Number(adminId),
+            targetUserId: targetUserId != null ? Number(targetUserId) : null,
+            action,
+            details: details || '',
+            createdAt: new Date().toISOString()
+        });
+        ForumDB.saveModLogs(logs);
+    },
+
+    // --- Ban / Restriction helper’ları ---
+    isUserBanned: (userId) => {
+        const bans = ForumDB.getBans();
+        const now = Date.now();
+        return bans.some(b => {
+            if (Number(b.userId) !== Number(userId)) return false;
+            if (b.type === 'permanent') return true;
+            return b.expiresAt && new Date(b.expiresAt).getTime() > now;
+        });
+    },
+
+    getActiveRestrictions: (userId) => {
+        const list = ForumDB.getRestrictions();
+        const now = Date.now();
+        return list.filter(r => {
+            if (Number(r.userId) !== Number(userId)) return false;
+            if (!r.expiresAt) return true;
+            return new Date(r.expiresAt).getTime() > now;
+        });
+    },
+
+    canUser: (action, userId) => {
+        if (ForumDB.isUserBanned(userId)) return false;
+        const restrictions = ForumDB.getActiveRestrictions(userId);
+        if (action === 'comment') {
+            return !restrictions.some(r => r.type === 'comments');
+        }
+        if (action === 'message') {
+            return !restrictions.some(r => r.type === 'messages');
+        }
+        if (action === 'project_apply') {
+            return !restrictions.some(r => r.type === 'project_applications');
+        }
+        // Diğer aksiyonlar için şimdilik sadece ban kontrolü
+        return true;
+    },
+
+    banUser: (userId, durationDays, reason, adminId) => {
+        const bans = ForumDB.getBans();
+        const now = new Date();
+        let type = 'temporary';
+        let expiresAt = null;
+        if (durationDays === 'permanent') {
+            type = 'permanent';
+        } else {
+            const d = new Date(now.getTime() + Number(durationDays || 0) * 24 * 60 * 60 * 1000);
+            expiresAt = d.toISOString();
+        }
+        bans.push({
+            id: Date.now(),
+            userId: Number(userId),
+            type,
+            reason: reason || '',
+            createdAt: now.toISOString(),
+            createdBy: Number(adminId),
+            expiresAt
+        });
+        ForumDB.saveBans(bans);
+        ForumDB.logModAction({
+            adminId,
+            targetUserId: userId,
+            action: 'ban',
+            details: `Kullanıcı banlandı (${type}, süre: ${durationDays} gün).`
+        });
+    },
+
+    unbanUser: (banId, adminId) => {
+        const bans = ForumDB.getBans();
+        const ban = bans.find(b => Number(b.id) === Number(banId));
+        const filtered = bans.filter(b => Number(b.id) !== Number(banId));
+        ForumDB.saveBans(filtered);
+        if (ban) {
+            ForumDB.logModAction({
+                adminId,
+                targetUserId: ban.userId,
+                action: 'unban',
+                details: 'Ban kaldırıldı.'
+            });
+        }
+    },
+
+    addRestriction: (userId, type, durationDays, reason, adminId) => {
+        const list = ForumDB.getRestrictions();
+        const now = new Date();
+        const expiresAt = durationDays
+            ? new Date(now.getTime() + Number(durationDays) * 24 * 60 * 60 * 1000).toISOString()
+            : null;
+        list.push({
+            id: Date.now(),
+            userId: Number(userId),
+            type, // 'comments' | 'messages' | 'project_applications'
+            reason: reason || '',
+            createdAt: now.toISOString(),
+            createdBy: Number(adminId),
+            expiresAt
+        });
+        ForumDB.saveRestrictions(list);
+        ForumDB.logModAction({
+            adminId,
+            targetUserId: userId,
+            action: 'restrict',
+            details: `Sınırlama eklendi: ${type}, süre: ${durationDays || 'belirtilmedi'} gün.`
+        });
+    },
+
+    removeRestriction: (restrictionId, adminId) => {
+        const list = ForumDB.getRestrictions();
+        const r = list.find(x => Number(x.id) === Number(restrictionId));
+        const filtered = list.filter(x => Number(x.id) !== Number(restrictionId));
+        ForumDB.saveRestrictions(filtered);
+        if (r) {
+            ForumDB.logModAction({
+                adminId,
+                targetUserId: r.userId,
+                action: 'unrestrict',
+                details: `Sınırlama kaldırıldı: ${r.type}.`
+            });
+        }
+    },
+
+    warnUser: (userId, reason, adminId) => {
+        const users = ForumDB.getUsers();
+        const idx = users.findIndex(u => Number(u.id) === Number(userId));
+        if (idx === -1) return;
+        const u = users[idx];
+        u.warningsCount = (u.warningsCount || 0) + 1;
+        if (!u.notifications) u.notifications = [];
+        u.notifications.unshift({
+            id: Date.now(),
+            type: 'warning',
+            message: reason || 'Platform kurallarını ihlal ettiğiniz için uyarı aldınız.',
+            createdAt: new Date().toISOString(),
+            read: false
+        });
+        localStorage.setItem('forum_users', JSON.stringify(users));
+
+        ForumDB.logModAction({
+            adminId,
+            targetUserId: userId,
+            action: 'warn',
+            details: `Uyarı gönderildi. Toplam uyarı: ${u.warningsCount}`
+        });
+
+        // 3. uyarıda otomatik kısa kısıtlama
+        if (u.warningsCount >= 3) {
+            ForumDB.addRestriction(userId, 'comments', 1, '3 uyarı sonrası otomatik yorum kısıtı', adminId);
+        }
+    },
+
+    reportContent: ({ reporterId, targetType, targetId, targetUserId, reason, message }) => {
+        const reports = ForumDB.getReports();
+        reports.unshift({
+            id: Date.now(),
+            reporterId: Number(reporterId),
+            targetUserId: targetUserId != null ? Number(targetUserId) : null,
+            targetType,   // 'idea' | 'comment' | 'project' | 'user'
+            targetId: Number(targetId),
+            reason,       // 'spam' | 'abuse' | 'inappropriate' | 'misinfo' | 'other'
+            message: message || '',
+            status: 'open',
+            createdAt: new Date().toISOString(),
+            handledBy: null,
+            handledAt: null,
+            actionTaken: null
+        });
+        ForumDB.saveReports(reports);
+    },
+
+    resolveReport: (reportId, { action, adminId }) => {
+        const reports = ForumDB.getReports();
+        const idx = reports.findIndex(r => Number(r.id) === Number(reportId));
+        if (idx === -1) return;
+        reports[idx].status = 'closed';
+        reports[idx].handledBy = Number(adminId);
+        reports[idx].handledAt = new Date().toISOString();
+        reports[idx].actionTaken = action || '';
+        ForumDB.saveReports(reports);
+
+        ForumDB.logModAction({
+            adminId,
+            targetUserId: reports[idx].targetUserId,
+            action: 'resolve_report',
+            details: `Rapor kapatıldı. Alınan aksiyon: ${action || 'belirtilmedi'}.`
+        });
+    },
+
     // --- Custom Badges (admin panel) ---
     getCustomBadges: () => {
         try {
@@ -83,6 +327,88 @@ const ForumDB = {
             localStorage.setItem('forum_users', JSON.stringify(users));
         }
         return badge;
+    },
+
+    // --- Streak helpers ---
+    _updateStreakForUser: (user, activityType) => {
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const last = user.lastStreakDate ? user.lastStreakDate.split('T')[0] : null;
+        const oneDayMs = 24 * 60 * 60 * 1000;
+
+        if (!user.streakCurrent) user.streakCurrent = 0;
+        if (!user.streakBest) user.streakBest = 0;
+
+        // Anti-spam: aynı gün içinde sadece ilk anlamlı aktivite seriye yazılsın
+        if (last === today) {
+            user.lastStreakActivity = activityType;
+            user.lastActiveAt = now.toISOString();
+            return;
+        }
+
+        if (!last) {
+            // İlk aktivite
+            user.streakCurrent = 1;
+        } else {
+            const lastDate = new Date(user.lastStreakDate);
+            const diffDays = Math.floor((now - lastDate) / oneDayMs);
+            if (diffDays === 1) {
+                user.streakCurrent += 1;
+            } else if (diffDays > 1) {
+                // Seri bozulmuş
+                user.streakCurrent = 1;
+            }
+        }
+
+        if (user.streakCurrent > user.streakBest) {
+            user.streakBest = user.streakCurrent;
+        }
+
+        user.lastStreakDate = now.toISOString();
+        user.lastStreakActivity = activityType;
+        user.lastActiveAt = now.toISOString();
+
+        // Ödüller
+        const rewards = [
+            { days: 3, xp: 20, badge: null },
+            { days: 7, xp: 0, badge: 'streak_7' },
+            { days: 14, xp: 40, badge: null },
+            { days: 30, xp: 0, badge: 'streak_30' },
+            { days: 60, xp: 0, badge: 'streak_60_premium' },
+            { days: 100, xp: 0, badge: 'streak_100_legend' }
+        ];
+
+        const justHit = rewards.find(r => r.days === user.streakCurrent);
+        if (justHit) {
+            if (justHit.xp) {
+                user.xp = (user.xp || 0) + justHit.xp;
+            }
+            if (justHit.badge) {
+                if (!user.badges) user.badges = [];
+                if (!user.badges.includes(justHit.badge)) {
+                    user.badges.push(justHit.badge);
+                }
+            }
+            if (!user.notifications) user.notifications = [];
+            user.notifications.unshift({
+                id: Date.now() + 5,
+                type: 'streak_reward',
+                message: `${user.streakCurrent} günlük seriye ulaştın!`,
+                createdAt: now.toISOString(),
+                read: false
+            });
+        }
+    },
+
+    getUserStreakInfo: (userId) => {
+        const users = ForumDB.getUsers();
+        const u = users.find(x => Number(x.id) === Number(userId));
+        if (!u) return { current: 0, best: 0, lastActivityAt: null };
+        return {
+            current: u.streakCurrent || 0,
+            best: u.streakBest || 0,
+            lastActivityAt: u.lastActiveAt || null
+        };
     },
 
     addXP: (userId, activityType) => {
@@ -163,6 +489,9 @@ const ForumDB = {
             }
         });
 
+        // Streak update (her anlamlı XP aktivitesi seriyi tetikler)
+        ForumDB._updateStreakForUser(users[userIndex], activityType);
+
         localStorage.setItem('forum_users', JSON.stringify(users));
         
         // Update Session
@@ -231,7 +560,11 @@ const ForumDB = {
                 followers: arr(user.followers),
                 following: arr(user.following),
                 notifications: arr(user.notifications),
-                activities: arr(user.activities)
+                activities: arr(user.activities),
+                streakCurrent: typeof user.streakCurrent === 'number' ? user.streakCurrent : 0,
+                streakBest: typeof user.streakBest === 'number' ? user.streakBest : 0,
+                lastStreakDate: user.lastStreakDate || null,
+                lastActiveAt: user.lastActiveAt || null
             };
         };
         const adminEmail = 'admin@forum.org';
@@ -432,6 +765,12 @@ const ForumDB = {
         const users = ForumDB.getUsers();
         const user = users.find(u => u.email === email && u.password === password);
         if (user) {
+            if (ForumDB.isUserBanned(user.id)) {
+                if (typeof ForumUI !== 'undefined') {
+                    ForumUI.notify('Hesabınız geçici olarak kısıtlanmıştır.', 'error');
+                }
+            return null;
+            }
             ForumDB.setSession(user);
             
             // XP: Daily Login
@@ -1055,15 +1394,72 @@ const ForumDB = {
         return true;
     },
 
-    // --- Ideas & Forum (Point 5) ---
-    getIdeas: () => JSON.parse(localStorage.getItem('forum_ideas')) || [],
+    // --- Ideas & Fikir Panosu (Point 5) ---
+    getIdeas: () => {
+        let ideas;
+        try {
+            ideas = JSON.parse(localStorage.getItem('forum_ideas')) || [];
+        } catch (e) {
+            ideas = [];
+            localStorage.removeItem('forum_ideas');
+        }
+        if (!Array.isArray(ideas)) ideas = [];
+        const normalize = (i) => {
+            const idea = i && typeof i === 'object' ? i : {};
+            const voters = Array.isArray(idea.voters) ? idea.voters : [];
+            const upVotes = typeof idea.upVotes === 'number' ? idea.upVotes : voters.filter(v => v.value === 1).length;
+            const downVotes = typeof idea.downVotes === 'number' ? idea.downVotes : voters.filter(v => v.value === -1).length;
+            return {
+                id: idea.id || Date.now(),
+                title: idea.title || '',
+                content: idea.content || '',
+                category: idea.category || 'general',
+                userId: Number(idea.userId) || 0,
+                userName: idea.userName || 'Üye',
+                createdAt: idea.createdAt || new Date().toISOString(),
+                status: idea.status || 'open',
+                upVotes,
+                downVotes,
+                voters,
+                comments: Array.isArray(idea.comments) ? idea.comments : [],
+                isFeaturedWeek: !!idea.isFeaturedWeek,
+                convertedToProjectId: idea.convertedToProjectId || null
+            };
+        };
+        const normalized = ideas.map(normalize);
+        if (JSON.stringify(ideas) !== JSON.stringify(normalized)) {
+            localStorage.setItem('forum_ideas', JSON.stringify(normalized));
+        }
+        return normalized;
+    },
+
+    getTrendingIdeas: (limit = 5) => {
+        return ForumDB.getIdeas()
+            .filter(i => i.status === 'open')
+            .sort((a, b) => ((b.upVotes || 0) - (b.downVotes || 0)) - ((a.upVotes || 0) - (a.downVotes || 0)))
+            .slice(0, limit);
+    },
+
+    getIdeaOfTheWeek: () => {
+        const ideas = ForumDB.getIdeas();
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const recent = ideas.filter(i => new Date(i.createdAt) >= sevenDaysAgo && i.status === 'open');
+        if (recent.length === 0) return null;
+        return recent.sort((a, b) => ((b.upVotes || 0) - (b.downVotes || 0)) - ((a.upVotes || 0) - (a.downVotes || 0)))[0];
+    },
     createIdea: (ideaData) => {
         const ideas = ForumDB.getIdeas();
         const newIdea = {
             id: Date.now(),
             comments: [],
-            likes: [],
+            voters: [],
+            upVotes: 0,
+            downVotes: 0,
             createdAt: new Date().toISOString(),
+            status: 'open',
+            isFeaturedWeek: false,
+            convertedToProjectId: null,
             ...ideaData
         };
         ideas.push(newIdea);
@@ -1080,21 +1476,34 @@ const ForumDB = {
         
         return newIdea;
     },
-    toggleIdeaLike: (ideaId, userId) => {
+    voteIdea: (ideaId, userId, value) => {
         const ideas = ForumDB.getIdeas();
         const index = ideas.findIndex(i => Number(i.id) === Number(ideaId));
-        if (index !== -1) {
-            if (!ideas[index].likes) ideas[index].likes = [];
-            const userIdx = ideas[index].likes.indexOf(Number(userId));
-            if (userIdx === -1) {
-                ideas[index].likes.push(Number(userId));
-            } else {
-                ideas[index].likes.splice(userIdx, 1);
-            }
-            localStorage.setItem('forum_ideas', JSON.stringify(ideas));
-            return ideas[index].likes;
+        if (index === -1) return null;
+        const idea = ideas[index];
+        const v = Math.sign(value) === -1 ? -1 : 1;
+        if (!Array.isArray(idea.voters)) idea.voters = [];
+        let up = idea.upVotes || 0;
+        let down = idea.downVotes || 0;
+
+        const existing = idea.voters.find(vt => Number(vt.userId) === Number(userId));
+        if (!existing) {
+            idea.voters.push({ userId: Number(userId), value: v });
+            if (v === 1) up++; else down++;
+        } else if (existing.value === v) {
+            // Same vote again -> no-op
+        } else {
+            // Switch vote
+            if (existing.value === 1) { up--; down++; }
+            else { down--; up++; }
+            existing.value = v;
         }
-        return null;
+
+        idea.upVotes = up;
+        idea.downVotes = down;
+        ideas[index] = idea;
+        localStorage.setItem('forum_ideas', JSON.stringify(ideas));
+        return { upVotes: up, downVotes: down, value: v };
     },
     addIdeaComment: (ideaId, commentData) => {
         const ideas = ForumDB.getIdeas();
@@ -1117,6 +1526,50 @@ const ForumDB = {
             return newComment;
         }
         return null;
+    },
+
+    convertIdeaToProject: (ideaId, committeeId, creatorId) => {
+        const ideas = ForumDB.getIdeas();
+        const idx = ideas.findIndex(i => Number(i.id) === Number(ideaId));
+        if (idx === -1) return null;
+        const idea = ideas[idx];
+        if (idea.convertedToProjectId) return null;
+
+        const creator = ForumDB.getUsers().find(u => Number(u.id) === Number(creatorId));
+        const project = ForumDB.createProject({
+            title: idea.title,
+            description: idea.content,
+            category: committeeId,
+            creatorId: creatorId,
+            creatorName: creator?.fullName || 'Yönetici',
+            needs: 'Fikirden projeye dönüştürüldü'
+        });
+
+        idea.status = 'accepted';
+        idea.convertedToProjectId = project.id;
+        ideas[idx] = idea;
+        localStorage.setItem('forum_ideas', JSON.stringify(ideas));
+
+        // Reward idea owner
+        const users = ForumDB.getUsers();
+        const ownerIdx = users.findIndex(u => Number(u.id) === Number(idea.userId));
+        if (ownerIdx !== -1) {
+            if (!users[ownerIdx].badges) users[ownerIdx].badges = [];
+            if (!users[ownerIdx].badges.includes('idea_accepted')) {
+                users[ownerIdx].badges.push('idea_accepted');
+            }
+            if (!users[ownerIdx].notifications) users[ownerIdx].notifications = [];
+            users[ownerIdx].notifications.unshift({
+                id: Date.now(),
+                type: 'idea_accepted',
+                message: `"${idea.title}" başlıklı fikrin bir projeye dönüştürüldü!`,
+                createdAt: new Date().toISOString(),
+                read: false
+            });
+            localStorage.setItem('forum_users', JSON.stringify(users));
+        }
+
+        return project;
     },
 
     // --- Events & Calendar (Point 4, 10) ---
@@ -1194,7 +1647,12 @@ const ForumDB = {
             'committee_member': { label: 'Komite Üyesi', icon: 'shield' },
             'project_leader': { label: 'Proje Lideri', icon: 'rocket' },
             'admin': { label: 'Yönetici', icon: 'shield-check' },
-            'founder': { label: 'Kurucu', icon: 'award' }
+            'founder': { label: 'Kurucu', icon: 'award' },
+            'streak_7': { label: '7 Günlük Seri', icon: 'flame' },
+            'streak_30': { label: '30 Günlük Seri', icon: 'flame' },
+            'streak_60_premium': { label: '60 Günlük Premium Seri', icon: 'flame' },
+            'streak_100_legend': { label: 'Efsanevi Üye', icon: 'flame' },
+            'idea_accepted': { label: 'Fikir Ustası', icon: 'lightbulb' }
         };
         const custom = {};
         ForumDB.getCustomBadges().forEach(b => {
