@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetim Kurulu | Forum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#000000', secondary: '#FFFFFF', accent: '#E31E24' },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased bg-black text-white">
+    <!-- Navbar (minimal) -->
+    <nav class="fixed w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="../index.html" class="text-2xl font-extrabold tracking-tighter">FORUM<span class="text-accent">.</span></a>
+                <div class="hidden md:flex items-center gap-4 text-[11px] font-semibold uppercase tracking-widest">
+                    <a href="../index.html" class="hover:text-accent transition">Ana Sayfa</a>
+                    <a href="dashboard.html" class="hover:text-accent transition">Panel</a>
+                    <div data-theme-toggle="pill"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="relative pt-28 md:pt-32 pb-16 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-black via-black to-red-900/40"></div>
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-accent/20 rounded-full blur-3xl opacity-60"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl opacity-50"></div>
+        <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center" data-aos="fade-up">
+            <p class="text-[11px] font-black uppercase tracking-[0.4em] text-gray-400 mb-4">Forum Yönetimi</p>
+            <h1 class="text-3xl md:text-5xl font-black tracking-tight mb-4">Yönetim Kurulu</h1>
+            <p class="max-w-2xl mx-auto text-sm md:text-base text-gray-300 leading-relaxed">
+                Forum platformunun stratejisini belirleyen, komiteleri destekleyen ve topluluğun gelişimini yöneten lider ekip.
+            </p>
+        </div>
+    </section>
+
+    <!-- yönetim kartları -->
+    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 space-y-12">
+        <section id="governance-board" class="space-y-8">
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Kurul Üyeleri</h2>
+            </div>
+            <div id="governance-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic cards -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function mapGovernanceRole(role) {
+            switch (role) {
+                case 'president': return 'Oluşum Başkanı';
+                case 'vp': return 'Başkan Yardımcısı';
+                case 'school_president': return 'Okul Başkanı';
+                case 'committee_head': return 'Komite Başkanı';
+                default: return 'Yönetim Üyesi';
+            }
+        }
+
+        function loadGovernanceBoard() {
+            const users = ForumDB.getUsers();
+            const management = users.filter(u => u.governanceRole && u.governanceRole !== 'none');
+            const container = document.getElementById('governance-grid');
+
+            if (management.length === 0) {
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500 text-sm italic">Henüz tanımlı bir yönetim kurulu üyesi yok.</p>';
+                return;
+            }
+
+            container.innerHTML = management.map((u, idx) => {
+                const roleLabel = mapGovernanceRole(u.governanceRole);
+                const schoolLabel = u.school || (u.committees && u.committees[0]) || 'Forum Genel';
+                const xpInfo = ForumDB.getUserXPInfo(u.id) || { xp: 0, level: 1, progress: 0 };
+                const activity = Math.min(100, xpInfo.progress || 0);
+                const badges = u.badges || [];
+
+                return `
+                    <article class="group relative bg-gradient-to-br from-slate-900/80 to-slate-950/90 rounded-3xl border border-white/5 p-6 flex flex-col justify-between overflow-hidden shadow-lg hover:shadow-2xl hover:border-accent/60 transition-all duration-300 hover:-translate-y-1" data-aos="zoom-in" data-aos-delay="${idx * 40}">
+                        <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                            <div class="absolute -inset-20 bg-radial from-accent/20 via-transparent to-transparent blur-3xl"></div>
+                        </div>
+                        <div class="relative flex items-start gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-black flex items-center justify-center text-2xl font-black border border-accent/40 shadow-lg shadow-accent/30">
+                                ${u.fullName?.[0] || '?'}
+                            </div>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <h3 class="text-base font-black tracking-tight">${u.fullName}</h3>
+                                    <span class="px-2.5 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-widest whitespace-nowrap">${roleLabel}</span>
+                                </div>
+                                <p class="text-[11px] text-gray-400 font-semibold uppercase tracking-widest">${schoolLabel}</p>
+                                <p class="mt-2 text-xs text-gray-300 line-clamp-2">${u.intro || 'Forum yönetim ekibi üyesi.'}</p>
+                            </div>
+                        </div>
+                        <div class="relative mt-4 space-y-3">
+                            <div class="flex items-center justify-between text-[11px] text-gray-400">
+                                <span>Aktivite Seviyesi</span>
+                                <span class="font-bold text-gray-200">${activity}%</span>
+                            </div>
+                            <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-accent to-white/80 rounded-full transition-all duration-700" style="width:${activity}%"></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2">
+                                <div class="flex -space-x-1">
+                                    ${badges.slice(0,3).map(b => `<span class="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[9px] font-black uppercase">${b.toString().slice(0,2)}</span>`).join('')}
+                                    ${badges.length > 3 ? `<span class="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[9px] font-black">+${badges.length-3}</span>` : ''}
+                                </div>
+                                <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">Seviye ${xpInfo.level || 1}</span>
+                            </div>
+                        </div>
+                        <div class="relative mt-5 flex items-center justify-between gap-2">
+                            <a href="profile.html?id=${u.id}" class="flex-1 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white text-black text-[11px] font-black uppercase tracking-widest hover:bg-accent hover:text-white transition shadow-md">Profili Gör</a>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGovernanceBoard();
+            AOS.init({ duration: 800, once: true });
+        });
+    </script>
+</body>
+</html>
+

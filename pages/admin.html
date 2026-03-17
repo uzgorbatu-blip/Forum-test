@@ -30,6 +30,10 @@
                 <button onclick="showAdminTab('users')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="users"><i data-lucide="users" class="mr-3 w-4 h-4"></i> Üyeler</button>
                 <button onclick="showAdminTab('committees')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="committees"><i data-lucide="layout" class="mr-3 w-4 h-4"></i> Komite Yönetimi</button>
                 <button onclick="showAdminTab('announcements')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="announcements"><i data-lucide="bell" class="mr-3 w-4 h-4"></i> Duyurular</button>
+                <button onclick="showAdminTab('gov-announcements')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="gov-announcements"><i data-lucide="megaphone" class="mr-3 w-4 h-4"></i> Yönetim Duyuruları</button>
+                <button onclick="showAdminTab('gov-messages')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="gov-messages"><i data-lucide="inbox" class="mr-3 w-4 h-4"></i> Yönetim Mesajları</button>
+                <button onclick="showAdminTab('gov-polls')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="gov-polls"><i data-lucide="bar-chart-3" class="mr-3 w-4 h-4"></i> Yönetim Anketleri</button>
+                <button onclick="showAdminTab('gov-activities')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="gov-activities"><i data-lucide="list-checks" class="mr-3 w-4 h-4"></i> Yönetim Faaliyetleri</button>
                 <button onclick="showAdminTab('projects')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="projects"><i data-lucide="rocket" class="mr-3 w-4 h-4"></i> Projeler</button>
                 <button onclick="showAdminTab('xp')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="xp"><i data-lucide="zap" class="mr-3 w-4 h-4"></i> Puan Sistemi</button>
                 <button onclick="showAdminTab('settings')" class="admin-nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-accent transition text-sm font-bold uppercase tracking-widest flex items-center" data-tab="settings"><i data-lucide="settings" class="mr-3 w-4 h-4"></i> Ayarlar</button>
@@ -195,6 +199,107 @@
                 </div>
                 <div id="ann-list-admin" class="space-y-4"></div>
             </div>
+
+            <!-- Governance Announcements -->
+            <div id="admin-gov-announcements" class="admin-tab-content hidden space-y-6">
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-black mb-2 uppercase tracking-tight">Yönetim Duyurusu Yayınla</h3>
+                    <p class="text-[11px] text-gray-500 mb-6">Bu alan yalnızca yönetim kurulu üyeleri ve admin için görünür olmalıdır. Gönderilen duyurular ana sayfada öne çıkar.</p>
+                    <form id="gov-ann-form" class="space-y-4">
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2 space-y-2">
+                                <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Başlık</label>
+                                <input id="gov-ann-title" placeholder="Duyuru Başlığı" required class="w-full px-4 py-3 border rounded-xl text-sm">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Kategori</label>
+                                <select id="gov-ann-category" class="w-full px-4 py-3 border rounded-xl text-sm">
+                                    <option value="genel">Genel</option>
+                                    <option value="etkinlik">Etkinlik</option>
+                                    <option value="duyuru">Duyuru</option>
+                                    <option value="onemli">Önemli</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">İçerik</label>
+                            <textarea id="gov-ann-content" placeholder="Yönetim kurulu duyurusu metni..." required class="w-full px-4 py-3 border rounded-xl text-sm" rows="4"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="inline-flex items-center gap-2 bg-black text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-accent transition">
+                                <i data-lucide="megaphone" class="w-4 h-4"></i>
+                                Yayınla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div id="gov-ann-list-admin" class="space-y-4"></div>
+            </div>
+
+            <!-- Governance Messages -->
+            <div id="admin-gov-messages" class="admin-tab-content hidden space-y-6">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-8 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-black uppercase tracking-tight">Yönetim Mesajları</h3>
+                            <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Kullanıcıların yönetim kuruluna ilettiği mesajlar</p>
+                        </div>
+                    </div>
+                    <div id="gov-messages-list-admin" class="p-4 md:p-6"></div>
+                </div>
+            </div>
+
+            <!-- Governance Polls -->
+            <div id="admin-gov-polls" class="admin-tab-content hidden space-y-6">
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-black mb-2 uppercase tracking-tight">Yönetim Anketi Oluştur</h3>
+                    <p class="text-[11px] text-gray-500 mb-6">Bu alan yalnızca yönetim kurulu üyeleri ve admin için aktiftir. Anketler tüm üyeler tarafından oylanabilir.</p>
+                    <form id="gov-poll-form" class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Soru</label>
+                            <input id="gov-poll-question" class="w-full px-4 py-3 border rounded-xl text-sm" placeholder="Örn: Hangi komiteye öncelik verelim?" required>
+                        </div>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2 space-y-2">
+                                <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Seçenekler</label>
+                                <div id="gov-poll-options" class="space-y-2">
+                                    <input class="w-full px-4 py-2 border rounded-xl text-sm" placeholder="Seçenek 1" required>
+                                    <input class="w-full px-4 py-2 border rounded-xl text-sm" placeholder="Seçenek 2" required>
+                                </div>
+                                <button type="button" id="gov-poll-add-option" class="mt-2 text-[11px] font-black uppercase tracking-widest text-accent hover:underline">+ Yeni Seçenek Ekle</button>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Kapsam</label>
+                                <select id="gov-poll-scope" class="w-full px-4 py-3 border rounded-xl text-sm">
+                                    <option value="all">Tüm Üyeler</option>
+                                    <option value="members">Sadece Kayıtlı Üyeler</option>
+                                    <option value="governance">Sadece Yönetim</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="inline-flex items-center gap-2 bg-black text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-accent transition">
+                                <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                                Anketi Yayınla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div id="gov-polls-list-admin" class="space-y-4"></div>
+            </div>
+
+            <!-- Governance Activities / Transparency -->
+            <div id="admin-gov-activities" class="admin-tab-content hidden space-y-6">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-8 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-black uppercase tracking-tight">Yönetim Faaliyetleri</h3>
+                            <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Kullanıcıya açık şeffaflık günlüğü</p>
+                        </div>
+                    </div>
+                    <div id="gov-activities-list-admin" class="p-4 md:p-6 space-y-3 text-sm"></div>
+                </div>
+            </div>
             </div>
         </main>
     </div>
@@ -240,6 +345,9 @@
                     `).join('')}</tbody></table>`;
             } else if (tabId === 'users') {
                 const users = ForumDB.getUsers();
+                const session = ForumDB.getSession();
+                const canManageUsers = ForumDB.canManageUsers(session);
+                const canBanUsers = ForumDB.canBanUsers(session);
                 document.getElementById('users-list-admin').innerHTML = `
                     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="px-8 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
@@ -255,49 +363,73 @@
                                         <th class="p-4">Üye</th>
                                         <th class="p-4">Kullanıcı Adı</th>
                                         <th class="p-4">Rol</th>
+                                        <th class="p-4">Yönetim Rolü</th>
                                         <th class="p-4">Komiteler</th>
                                         <th class="p-4">Tarih</th>
                                         <th class="p-4 text-right">Moderasyon</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${users.map(u => `
-                                        <tr class="border-b border-gray-50 text-sm hover:bg-gray-50/80 transition">
-                                            <td class="p-4 font-bold">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-black">
-                                                        ${u.fullName?.[0] || '?'}
+                                    ${users.map(u => {
+                                        const govLabel =
+                                            u.governanceRole === 'president' ? 'Oluşum Başkanı' :
+                                            u.governanceRole === 'vp' ? 'Başkan Yardımcısı' :
+                                            u.governanceRole === 'school_president' ? 'Okul Başkanı' :
+                                            u.governanceRole === 'committee_head' ? 'Komite Başkanı' :
+                                            'Yok';
+                                        const govCell = canManageUsers
+                                            ? `<select onchange="updateGovernanceRole(${u.id}, this.value)" class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 text-[10px] font-bold uppercase outline-none cursor-pointer">
+                                                    <option value="none" ${!u.governanceRole || u.governanceRole === 'none' ? 'selected' : ''}>Yok</option>
+                                                    <option value="president" ${u.governanceRole === 'president' ? 'selected' : ''}>Oluşum Başkanı</option>
+                                                    <option value="vp" ${u.governanceRole === 'vp' ? 'selected' : ''}>Başkan Yardımcısı</option>
+                                                    <option value="school_president" ${u.governanceRole === 'school_president' ? 'selected' : ''}>Okul Başkanı</option>
+                                                    <option value="committee_head" ${u.governanceRole === 'committee_head' ? 'selected' : ''}>Komite Başkanı</option>
+                                                </select>`
+                                            : `<span class="text-[11px] text-gray-500">${govLabel}</span>`;
+                                        let moderationCell = '';
+                                        if (u.role === 'admin') {
+                                            moderationCell = '<span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500">Yönetici</span>';
+                                        } else if (canManageUsers) {
+                                            moderationCell =
+                                                '<div class="inline-flex items-center gap-1">' +
+                                                    `<button onclick="openWarnModalAdmin(${u.id})" class="px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest hover:bg-amber-100">Uyar</button>` +
+                                                    (canBanUsers
+                                                        ? `<button onclick="openBanModalAdmin(${u.id}, 1)" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest hover:bg-gray-200">Ban 24s</button>
+                                                           <button onclick="openBanModalAdmin(${u.id}, 7)" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest hover:bg-gray-200">Ban 7g</button>
+                                                           <button onclick="openBanModalAdmin(${u.id}, 30)" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest hover:bg-gray-200">Ban 30g</button>
+                                                           <button onclick="openBanModalAdmin(${u.id}, 'permanent')" class="px-3 py-1 rounded-full bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-200">Kalıcı</button>`
+                                                        : '') +
+                                                '</div>';
+                                        }
+                                        return `
+                                            <tr class="border-b border-gray-50 text-sm hover:bg-gray-50/80 transition">
+                                                <td class="p-4 font-bold">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-black">
+                                                            ${u.fullName?.[0] || '?'}
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-sm font-semibold">${u.fullName}</p>
+                                                            <p class="text-[10px] font-normal text-gray-400">${u.email}</p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p class="text-sm font-semibold">${u.fullName}</p>
-                                                        <p class="text-[10px] font-normal text-gray-400">${u.email}</p>
+                                                </td>
+                                                <td class="p-4 text-xs">
+                                                    <div class="flex items-center justify-between gap-2">
+                                                        <span class="font-mono text-[11px] text-gray-800">${u.username || '-'}</span>
+                                                        <button onclick="openUsernameModal(${u.id}, '${u.username || ''}')" class="text-[10px] font-black uppercase tracking-widest text-accent hover:underline">Düzenle</button>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td class="p-4 text-xs">
-                                                <div class="flex items-center justify-between gap-2">
-                                                    <span class="font-mono text-[11px] text-gray-800">${u.username || '-'}</span>
-                                                    <button onclick="openUsernameModal(${u.id}, '${u.username || ''}')" class="text-[10px] font-black uppercase tracking-widest text-accent hover:underline">Düzenle</button>
-                                                </div>
-                                            </td>
-                                            <td class="p-4 text-xs font-black uppercase">${u.role}</td>
-                                            <td class="p-4 text-xs">${u.committees?.join(', ') || '-'}</td>
-                                            <td class="p-4 text-xs">${new Date(u.joinedAt).toLocaleDateString()}</td>
-                                            <td class="p-4 text-right">
-                                                ${u.role === 'admin' ? `
-                                                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500">Yönetici</span>
-                                                ` : `
-                                                    <div class="inline-flex items-center gap-1">
-                                                        <button onclick="openWarnModalAdmin(${u.id})" class="px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest hover:bg-amber-100">Uyar</button>
-                                                        <button onclick="openBanModalAdmin(${u.id}, 1)" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest hover:bg-gray-200">Ban 24s</button>
-                                                        <button onclick="openBanModalAdmin(${u.id}, 7)" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest hover:bg-gray-200">Ban 7g</button>
-                                                        <button onclick="openBanModalAdmin(${u.id}, 30)" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest hover:bg-gray-200">Ban 30g</button>
-                                                        <button onclick="openBanModalAdmin(${u.id}, 'permanent')" class="px-3 py-1 rounded-full bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-200">Kalıcı</button>
-                                                    </div>
-                                                `}
-                                            </td>
-                                        </tr>
-                                    `).join('')}
+                                                </td>
+                                                <td class="p-4 text-xs font-black uppercase">${u.role}</td>
+                                                <td class="p-4 text-xs">${govCell}</td>
+                                                <td class="p-4 text-xs">${(u.committees || []).join(', ') || '-'}</td>
+                                                <td class="p-4 text-xs">${new Date(u.joinedAt).toLocaleDateString()}</td>
+                                                <td class="p-4 text-right">
+                                                    ${moderationCell}
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
                                 </tbody>
                             </table>
                         </div>
@@ -375,6 +507,150 @@
             } else if (tabId === 'announcements') {
                 const ann = ForumDB.getAnnouncements();
                 document.getElementById('ann-list-admin').innerHTML = ann.map(a => `<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h4 class="font-bold text-lg">${a.title}</h4><p class="text-gray-600 text-sm mt-2">${a.content}</p><div class="mt-4 text-[10px] text-gray-400 font-black uppercase tracking-widest">${new Date(a.date).toLocaleDateString()}</div></div>`).join('');
+            } else if (tabId === 'gov-announcements') {
+                const session = ForumDB.getSession();
+                const formWrap = document.getElementById('gov-ann-form')?.closest('div.bg-white');
+                if (formWrap) {
+                    if (!session || (!ForumDB.isGovernanceMember(session) && session.role !== 'admin')) {
+                        formWrap.classList.add('opacity-60', 'pointer-events-none');
+                    } else {
+                        formWrap.classList.remove('opacity-60', 'pointer-events-none');
+                    }
+                }
+
+                const ann = ForumDB.getGovernanceAnnouncements();
+                document.getElementById('gov-ann-list-admin').innerHTML =
+                    ann.length === 0
+                        ? '<p class="p-4 italic text-gray-500">Henüz yönetim duyurusu yok.</p>'
+                        : ann.map(a => `
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <div class="flex items-center gap-2 text-[11px] text-gray-400 font-black uppercase tracking-widest mb-1">
+                                        <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">${a.category}</span>
+                                        <span>${new Date(a.createdAt).toLocaleString()}</span>
+                                    </div>
+                                    <h4 class="font-bold text-lg">${a.title}</h4>
+                                    <p class="text-gray-600 text-sm mt-2">${a.content}</p>
+                                    <p class="mt-3 text-[11px] text-gray-500 font-black uppercase tracking-widest">Gönderen: ${a.authorName}</p>
+                                </div>
+                            </div>
+                        `).join('');
+            } else if (tabId === 'gov-messages') {
+                const msgs = ForumDB.getGovernanceMessages();
+                const users = ForumDB.getUsers();
+                const statusLabel = { open: 'Açık', in_progress: 'İşlemde', resolved: 'Çözüldü' };
+                document.getElementById('gov-messages-list-admin').innerHTML =
+                    msgs.length === 0
+                        ? '<p class="p-4 italic text-gray-500">Henüz mesaj yok.</p>'
+                        : `<table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                <tr>
+                                    <th class="p-3">Gönderen</th>
+                                    <th class="p-3">Tür</th>
+                                    <th class="p-3">Konu</th>
+                                    <th class="p-3">Tarih</th>
+                                    <th class="p-3 text-right">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${msgs.map(m => {
+                                    const u = users.find(x => Number(x.id) === Number(m.fromUserId));
+                                    return `
+                                        <tr class="border-b border-gray-50">
+                                            <td class="p-3">
+                                                <p class="font-bold">${m.fromName}</p>
+                                                <p class="text-[10px] text-gray-400">${m.fromUsername ? '@' + m.fromUsername : (u?.email || '')}</p>
+                                            </td>
+                                            <td class="p-3 text-xs capitalize">${m.type}</td>
+                                            <td class="p-3 text-xs">
+                                                <div class="font-semibold">${m.subject}</div>
+                                                <div class="text-[11px] text-gray-500 mt-1 line-clamp-2">${m.content}</div>
+                                            </td>
+                                            <td class="p-3 text-xs">${new Date(m.createdAt).toLocaleString()}</td>
+                                            <td class="p-3 text-right">
+                                                <select onchange="updateGovMessageStatus(${m.id}, this.value)" class="border border-gray-200 rounded-lg px-2 py-1 text-[11px] font-black uppercase tracking-widest">
+                                                    <option value="open" ${m.status === 'open' ? 'selected' : ''}>Açık</option>
+                                                    <option value="in_progress" ${m.status === 'in_progress' ? 'selected' : ''}>İşlemde</option>
+                                                    <option value="resolved" ${m.status === 'resolved' ? 'selected' : ''}>Çözüldü</option>
+                                                </select>
+                                                <div class="mt-1 text-[10px] text-gray-400">${statusLabel[m.status] || m.status}</div>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>`;
+            } else if (tabId === 'gov-polls') {
+                const session = ForumDB.getSession();
+                const formWrap = document.getElementById('gov-poll-form')?.closest('div.bg-white');
+                if (formWrap) {
+                    if (!session || (!ForumDB.isGovernanceMember(session) && session.role !== 'admin')) {
+                        formWrap.classList.add('opacity-60', 'pointer-events-none');
+                    } else {
+                        formWrap.classList.remove('opacity-60', 'pointer-events-none');
+                    }
+                }
+
+                const polls = ForumDB.getGovernancePolls();
+                const users = ForumDB.getUsers();
+                document.getElementById('gov-polls-list-admin').innerHTML =
+                    polls.length === 0
+                        ? '<p class="p-4 italic text-gray-500">Henüz anket yok.</p>'
+                        : polls.map(p => {
+                            const totalVotes = p.options.reduce((sum, o) => sum + (o.votes || 0), 0);
+                            return `
+                                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[11px] text-gray-400 font-black uppercase tracking-widest mb-1">
+                                                ${p.scope === 'governance' ? 'Yalnızca Yönetim' : p.scope === 'members' ? 'Üyeler' : 'Tüm Kullanıcılar'}
+                                            </p>
+                                            <h4 class="font-bold text-lg">${p.question}</h4>
+                                        </div>
+                                        <div class="text-[11px] text-gray-400 font-black uppercase tracking-widest text-right">
+                                            <div>${new Date(p.createdAt).toLocaleDateString()}</div>
+                                            ${p.closesAt ? `<div>Son: ${new Date(p.closesAt).toLocaleDateString()}</div>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        ${p.options.map(o => {
+                                            const percent = totalVotes ? Math.round((o.votes || 0) * 100 / totalVotes) : 0;
+                                            return `
+                                                <div>
+                                                    <div class="flex items-center justify-between text-[11px] text-gray-600 mb-1">
+                                                        <span>${o.text}</span>
+                                                        <span class="font-black">${o.votes || 0} oy • ${percent}%</span>
+                                                    </div>
+                                                    <div class="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
+                                                        <div class="h-2 rounded-full bg-accent" style="width:${percent}%;"></div>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+            } else if (tabId === 'gov-activities') {
+                const acts = ForumDB.getGovernanceActivities();
+                document.getElementById('gov-activities-list-admin').innerHTML =
+                    acts.length === 0
+                        ? '<p class="p-4 italic text-gray-500">Henüz kayıtlı faaliyet yok.</p>'
+                        : acts.map(a => `
+                            <div class="flex items-start justify-between gap-3 py-2 border-b border-gray-50">
+                                <div>
+                                    <p class="text-[11px] text-gray-400 font-black uppercase tracking-widest mb-1">
+                                        <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">${a.type}</span>
+                                        ${a.actorName ? `• ${a.actorName}` : ''}
+                                    </p>
+                                    <p class="font-semibold">${a.title}</p>
+                                    ${a.description ? `<p class="text-xs text-gray-500 mt-1">${a.description}</p>` : ''}
+                                </div>
+                                <span class="text-[11px] text-gray-400 font-black uppercase tracking-widest whitespace-nowrap">
+                                    ${new Date(a.createdAt).toLocaleString()}
+                                </span>
+                            </div>
+                        `).join('');
             } else if (tabId === 'moderation') {
                 const users = ForumDB.getUsers();
 
@@ -515,6 +791,115 @@
             }
             closeUsernameModal();
             loadAdminData('users');
+        }
+
+        function updateGovernanceRole(userId, role) {
+            const session = ForumDB.getSession();
+            if (!ForumDB.canManageUsers(session)) {
+                if (window.ForumUI && ForumUI.notify) {
+                    ForumUI.notify('Bu işlem için yetkin yok.', 'error');
+                } else {
+                    alert('Bu işlem için yetkin yok.');
+                }
+                loadAdminData('users');
+                return;
+            }
+            const users = ForumDB.getUsers();
+            const idx = users.findIndex(u => Number(u.id) === Number(userId));
+            if (idx === -1) return;
+            users[idx].governanceRole = role || 'none';
+            localStorage.setItem('forum_users', JSON.stringify(users));
+            if (window.ForumUI && ForumUI.notify) {
+                ForumUI.notify('Yönetim rolü güncellendi.', 'success');
+            }
+            loadAdminData('users');
+        }
+
+        // Yönetim duyurusu form submit
+        document.addEventListener('DOMContentLoaded', () => {
+            const govAnnForm = document.getElementById('gov-ann-form');
+            if (govAnnForm) {
+                govAnnForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const title = document.getElementById('gov-ann-title').value;
+                    const content = document.getElementById('gov-ann-content').value;
+                    const category = document.getElementById('gov-ann-category').value;
+                    const res = ForumDB.createGovernanceAnnouncement({ title, content, category });
+                    if (!res.ok) {
+                        if (window.ForumUI && ForumUI.notify) {
+                            ForumUI.notify(res.error || 'Duyuru oluşturulamadı.', 'error');
+                        } else {
+                            alert(res.error || 'Duyuru oluşturulamadı.');
+                        }
+                        return;
+                    }
+                    govAnnForm.reset();
+                    loadAdminData('gov-announcements');
+                    if (window.ForumUI && ForumUI.notify) {
+                        ForumUI.notify('Yönetim duyurusu yayınlandı.', 'success');
+                    }
+                });
+            }
+
+            const govPollForm = document.getElementById('gov-poll-form');
+            const govPollOptions = document.getElementById('gov-poll-options');
+            const govPollAddBtn = document.getElementById('gov-poll-add-option');
+            if (govPollAddBtn && govPollOptions) {
+                govPollAddBtn.addEventListener('click', () => {
+                    const input = document.createElement('input');
+                    input.className = 'w-full px-4 py-2 border rounded-xl text-sm';
+                    input.placeholder = `Seçenek ${govPollOptions.querySelectorAll('input').length + 1}`;
+                    govPollOptions.appendChild(input);
+                });
+            }
+            if (govPollForm && govPollOptions) {
+                govPollForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const questionEl = document.getElementById('gov-poll-question');
+                    const scopeEl = document.getElementById('gov-poll-scope');
+                    const optionInputs = Array.from(govPollOptions.querySelectorAll('input'));
+                    const options = optionInputs.map(i => i.value.trim()).filter(Boolean);
+                    const res = ForumDB.createGovernancePoll({
+                        question: questionEl.value,
+                        options,
+                        scope: scopeEl.value
+                    });
+                    if (!res.ok) {
+                        if (window.ForumUI && ForumUI.notify) {
+                            ForumUI.notify(res.error || 'Anket oluşturulamadı.', 'error');
+                        } else {
+                            alert(res.error || 'Anket oluşturulamadı.');
+                        }
+                        return;
+                    }
+                    // Clear only texts, keep 2 inputs
+                    optionInputs.forEach((input, idx) => {
+                        if (idx < 2) input.value = '';
+                        else input.remove();
+                    });
+                    questionEl.value = '';
+                    loadAdminData('gov-polls');
+                    if (window.ForumUI && ForumUI.notify) {
+                        ForumUI.notify('Yönetim anketi yayınlandı.', 'success');
+                    }
+                });
+            }
+        });
+
+        function updateGovMessageStatus(id, status) {
+            const res = ForumDB.updateGovernanceMessageStatus(id, status);
+            if (!res.ok) {
+                if (window.ForumUI && ForumUI.notify) {
+                    ForumUI.notify(res.error || 'Durum güncellenemedi.', 'error');
+                } else {
+                    alert(res.error || 'Durum güncellenemedi.');
+                }
+                return;
+            }
+            loadAdminData('gov-messages');
+            if (window.ForumUI && ForumUI.notify) {
+                ForumUI.notify('Mesaj durumu güncellendi.', 'success');
+            }
         }
 
         function updateAppStatus(id, status) { 

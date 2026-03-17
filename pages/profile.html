@@ -51,13 +51,20 @@
                     <div class="h-48 w-full bg-gradient-to-r from-black to-gray-800 rounded-t-[3rem] shadow-lg"></div>
                     <div class="bg-white rounded-b-[3rem] px-8 pb-12 shadow-xl border-x border-b border-gray-100 -mt-12 relative">
                         <div class="flex flex-col md:flex-row items-center md:items-end md:space-x-8 -mt-16 md:-mt-20">
-                            <div class="w-32 h-32 md:w-40 md:h-40 bg-black text-white rounded-full flex items-center justify-center text-5xl font-black shrink-0 border-8 border-white shadow-2xl z-10" id="profile-avatar">F</div>
+                            <div id="profile-avatar-wrapper" class="relative">
+                                <div class="absolute inset-0 rounded-full border-4 border-accent/40 shadow-[0_0_40px_rgba(227,30,36,0.6)] opacity-0 scale-90 transition-all duration-500 pointer-events-none" id="governance-ring"></div>
+                                <div class="w-32 h-32 md:w-40 md:h-40 bg-black text-white rounded-full flex items-center justify-center text-5xl font-black shrink-0 border-8 border-white shadow-2xl z-10" id="profile-avatar">F</div>
+                                <div id="governance-badge" class="hidden absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-white text-[9px] font-black uppercase tracking-widest shadow-lg">
+                                    Yönetim Üyesi
+                                </div>
+                            </div>
                             <div class="flex-1 text-center md:text-left mt-6 md:mb-4">
                                 <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                                     <div>
-                                        <h1 class="text-4xl font-black uppercase tracking-tighter" id="profile-name">İsim Soyisim</h1>
-                                        <div class="flex items-center justify-center md:justify-start space-x-2 mt-1">
+                                        <h1 class="text-4xl font-black uppercase tracking-tighter flex items-center gap-2" id="profile-name">İsim Soyisim</h1>
+                                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-2" id="governance-meta">
                                             <span class="bg-accent/10 text-accent font-black text-[10px] px-3 py-1 rounded-full uppercase tracking-widest" id="profile-role">Rol</span>
+                                            <span class="hidden bg-black text-white font-black text-[9px] px-3 py-1 rounded-full uppercase tracking-widest border border-accent/60" id="profile-governance-role">Yönetim Rolü</span>
                                             <span class="text-gray-400 font-bold text-[10px] uppercase tracking-widest" id="profile-joined">Katılım: 2024</span>
                                         </div>
                                     </div>
@@ -92,7 +99,7 @@
                             </div>
                         </div>
 
-                        <!-- Streak Info -->
+                        <!-- Streak Info + Yönetim İstatistikleri -->
                         <div class="mt-8 px-4 pb-4">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center space-x-2">
@@ -101,7 +108,7 @@
                                 </div>
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest" id="profile-streak-last">Son Aktivite: -</p>
                             </div>
-                            <div class="grid grid-cols-3 gap-3">
+                            <div class="grid grid-cols-3 md:grid-cols-4 gap-3" id="streak-and-gov-stats">
                                 <div class="bg-black text-white rounded-2xl p-4 flex flex-col items-center justify-center">
                                     <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Aktif Seri</p>
                                     <p class="text-2xl font-black" id="profile-streak-current">0</p>
@@ -116,6 +123,11 @@
                                     <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Hedef</p>
                                     <p class="text-2xl font-black text-accent">🔥</p>
                                     <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">3 / 7 / 30</p>
+                                </div>
+                                <div class="hidden bg-white rounded-2xl p-4 border border-gray-100 md:flex flex-col items-center justify-center" id="gov-stat-card">
+                                    <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Yönetim Katkısı</p>
+                                    <p class="text-2xl font-black text-black" id="gov-stat-score">0</p>
+                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Faaliyet Kaydı</p>
                                 </div>
                             </div>
                         </div>
@@ -196,6 +208,39 @@
             document.getElementById('profile-bio').textContent = targetUser.intro || 'Henüz bir biyografi eklenmemiş.';
             document.getElementById('profile-role').textContent = targetUser.role === 'admin' ? 'Site Yöneticisi' : (targetUser.role === 'committee_head' ? 'Komite Başkanı' : 'Üye');
             document.getElementById('profile-joined').textContent = `Katılım: ${new Date(targetUser.joinedAt).getFullYear()}`;
+
+            // Governance specific visuals
+            const governanceBadge = document.getElementById('governance-badge');
+            const governanceRing = document.getElementById('governance-ring');
+            const govRolePill = document.getElementById('profile-governance-role');
+            const govStatCard = document.getElementById('gov-stat-card');
+            const hasGovRole = targetUser.governanceRole && targetUser.governanceRole !== 'none';
+            if (hasGovRole) {
+                const label =
+                    targetUser.governanceRole === 'president' ? 'Oluşum Başkanı' :
+                    targetUser.governanceRole === 'vp' ? 'Başkan Yardımcısı' :
+                    targetUser.governanceRole === 'school_president' ? 'Okul Başkanı' :
+                    targetUser.governanceRole === 'committee_head' ? 'Komite Başkanı' :
+                    'Yönetim Üyesi';
+                governanceBadge.classList.remove('hidden');
+                governanceRing.classList.remove('opacity-0', 'scale-90');
+                governanceRing.classList.add('opacity-100', 'scale-100');
+                govRolePill.classList.remove('hidden');
+                govRolePill.textContent = label;
+                if (govStatCard) {
+                    govStatCard.classList.remove('hidden');
+                    // Yönetim katkı skoru = faaliyet sayısı
+                    const acts = ForumDB.getGovernanceActivities().filter(a => a.actorId && Number(a.actorId) === Number(targetUser.id));
+                    document.getElementById('gov-stat-score').textContent = acts.length;
+                }
+            } else {
+                governanceBadge.classList.add('hidden');
+                governanceRing.classList.add('opacity-0', 'scale-90');
+                govRolePill.classList.add('hidden');
+                if (govStatCard) {
+                    govStatCard.classList.add('hidden');
+                }
+            }
             
             // Stats
             document.getElementById('stat-followers').textContent = (targetUser.followers || []).length;
@@ -244,9 +289,9 @@
                 `;
             } else {
                 const isFollowing = (session.following || []).some(id => Number(id) === Number(targetUser.id));
-                const isAdmin = session.role === 'admin';
+                const canBan = ForumDB.canBanUsers(session);
                 let adminControls = '';
-                if (isAdmin) {
+                if (canBan) {
                     adminControls = `
                         <div class="mt-3 flex flex-wrap gap-1 justify-center md:justify-start text-[9px]">
                             <button onclick="profileWarnUser(${targetUser.id})" class="px-3 py-1 rounded bg-amber-50 text-amber-600 font-black uppercase tracking-widest hover:bg-amber-100">Uyar</button>
@@ -325,7 +370,7 @@
             currentBanTargetId = targetId;
             currentBanDuration = duration;
             const session = ForumDB.getSession();
-            if (!session || session.role !== 'admin') return;
+            if (!session || !ForumDB.canBanUsers(session)) return;
 
             const modal = document.getElementById('ban-modal');
             const labelEl = document.getElementById('ban-modal-label');
@@ -348,7 +393,7 @@
 
         function submitBanModal() {
             const session = ForumDB.getSession();
-            if (!session || session.role !== 'admin') return;
+            if (!session || !ForumDB.canBanUsers(session)) return;
             if (!currentBanTargetId) {
                 closeBanModal();
                 return;
@@ -363,7 +408,7 @@
 
         function profileWarnUser(targetId) {
             const session = ForumDB.getSession();
-            if (!session || session.role !== 'admin') return;
+            if (!session || !ForumDB.canBanUsers(session)) return;
             currentWarnTargetId = targetId;
 
             const modal = document.getElementById('warn-modal');
@@ -380,7 +425,7 @@
 
         function profileBanUser(targetId, duration) {
             const session = ForumDB.getSession();
-            if (!session || session.role !== 'admin') return;
+            if (!session || !ForumDB.canBanUsers(session)) return;
             let label;
             if (duration === 'permanent') label = 'kalıcı ban';
             else if (duration === 1) label = '24 saatlik ban';
@@ -396,7 +441,7 @@
 
         function submitWarnModal() {
             const session = ForumDB.getSession();
-            if (!session || session.role !== 'admin') return;
+            if (!session || !ForumDB.canBanUsers(session)) return;
             if (!currentWarnTargetId) {
                 closeWarnModal();
                 return;

@@ -209,6 +209,13 @@ const ForumDB = {
             action: 'ban',
             details: `Kullanıcı banlandı (${type}, süre: ${durationDays} gün).`
         });
+        try {
+            ForumDB.logGovernanceActivity({
+                type: 'moderasyon_ban',
+                title: `Kullanıcı #${userId} banlandı`,
+                description: `Tür: ${type}, süre: ${durationDays} gün.`
+            });
+        } catch (e) {}
     },
 
     unbanUser: (banId, adminId) => {
@@ -223,6 +230,13 @@ const ForumDB = {
                 action: 'unban',
                 details: 'Ban kaldırıldı.'
             });
+            try {
+                ForumDB.logGovernanceActivity({
+                    type: 'moderasyon_unban',
+                    title: `Kullanıcı #${ban.userId} için ban kaldırıldı`,
+                    description: ''
+                });
+            } catch (e) {}
         }
     },
 
@@ -600,6 +614,8 @@ const ForumDB = {
             return {
                 ...user,
                 username: (typeof user.username === 'string' && user.username.trim()) ? user.username.trim() : null,
+                governanceRole: user.governanceRole || 'none', // president | vp | school_president | committee_head | none
+                school: user.school || user.schoolName || null,
                 role: user.role || 'member',
                 joinedAt: user.joinedAt || new Date().toISOString(),
                 xp: typeof user.xp === 'number' ? user.xp : (Number(user.xp) || 0),
@@ -647,6 +663,7 @@ const ForumDB = {
             interests: 'Tüm Alanlar',
             intro: 'Forum platformu genel yöneticisi.',
             role: 'admin',
+            governanceRole: 'president',
             xp: 5000,
             level: 6,
             xpHistory: [],
@@ -964,6 +981,18 @@ const ForumDB = {
             
             const session = ForumDB.getSession();
             if (session && Number(session.id) === Number(userId)) ForumDB.setSession(users[index]);
+
+            // Governance transparency log
+            try {
+                const actor = ForumDB.getSession();
+                const committeesMap = { bilim: 'Bilim Komitesi', teknoloji: 'Teknoloji Komitesi', sanat: 'Sanat Komitesi', sosyal: 'Sosyal Sorumluluk', organizasyon: 'Organizasyon' };
+                const committeeLabel = committeesMap[committeeId] || committeeId || 'Komite';
+                ForumDB.logGovernanceActivity({
+                    type: 'komite_baskani_atama',
+                    title: `${committeeLabel} için yeni komite başkanı atandı`,
+                    description: `${users[index].fullName} komite başkanı olarak görevlendirildi.` + (actor ? ` İşlem: ${actor.fullName}.` : '')
+                });
+            } catch (e) {}
             return true;
         }
         return false;
@@ -985,7 +1014,45 @@ const ForumDB = {
         if (session && Number(session.id) === Number(userId)) {
             ForumDB.setSession(user);
         }
+
+        // Governance transparency log
+        try {
+            const committeesMap = { bilim: 'Bilim Komitesi', teknoloji: 'Teknoloji Komitesi', sanat: 'Sanat Komitesi', sosyal: 'Sosyal Sorumluluk', organizasyon: 'Organizasyon' };
+            const committeeLabel = committeesMap[committeeId] || committeeId || 'Komite';
+            ForumDB.logGovernanceActivity({
+                type: 'komiteden_ayrilma',
+                title: `${user.fullName} ${committeeLabel} komitesinden ayrıldı`,
+                description: ''
+            });
+        } catch (e) {}
         return true;
+    },
+
+    // --- Yönetim Kurulu RBAC yardımcıları ---
+    isPresident: (user) => user && user.governanceRole === 'president',
+    isVicePresident: (user) => user && user.governanceRole === 'vp',
+    isSchoolPresident: (user) => user && user.governanceRole === 'school_president',
+    isGovernanceMember: (user) => user && user.governanceRole && user.governanceRole !== 'none',
+
+    canManageUsers: (user) => {
+        if (!user) return false;
+        if (user.role === 'admin') return true;
+        return ForumDB.isPresident(user) || ForumDB.isVicePresident(user);
+    },
+    canBanUsers: (user) => {
+        if (!user) return false;
+        // Sadece site admini ve Oluşum Başkanı
+        return user.role === 'admin' || ForumDB.isPresident(user);
+    },
+    canManageCommittees: (user) => {
+        if (!user) return false;
+        if (user.role === 'admin') return true;
+        return ForumDB.isPresident(user) || ForumDB.isVicePresident(user);
+    },
+    canApproveProjects: (user) => {
+        if (!user) return false;
+        if (user.role === 'admin') return true;
+        return ForumDB.isPresident(user) || ForumDB.isVicePresident(user) || user.role === 'committee_head';
     },
 
     // --- Applications ---
@@ -1031,6 +1098,18 @@ const ForumDB = {
                     if (session && Number(session.id) === Number(users[userIndex].id)) ForumDB.setSession(users[userIndex]);
                 }
             }
+            // Governance transparency log
+            const actor = ForumDB.getSession();
+            const committeesMap = { bilim: 'Bilim Komitesi', teknoloji: 'Teknoloji Komitesi', sanat: 'Sanat Komitesi', sosyal: 'Sosyal Sorumluluk', organizasyon: 'Organizasyon' };
+            const committeeLabel = committeesMap[apps[index].committeeId] || apps[index].committeeId || 'Komite';
+            const applicantName = apps[index].userName || `Kullanıcı #${apps[index].userId}`;
+            try {
+                ForumDB.logGovernanceActivity({
+                    type: status === 'accepted' ? 'başvuru_onay' : 'başvuru_red',
+                    title: `${committeeLabel} için üyelik başvurusu ${status === 'accepted' ? 'onaylandı' : 'reddedildi'}`,
+                    description: `${applicantName} adlı kullanıcının başvurusu ${status === 'accepted' ? 'kabul edildi' : 'reddedildi'}.` + (actor ? ` İşlem: ${actor.fullName}.` : '')
+                });
+            } catch (e) {}
             return true;
         }
         return false;
@@ -1149,6 +1228,18 @@ const ForumDB = {
                 localStorage.setItem('forum_users', JSON.stringify(users));
             }
         }
+
+        // Governance transparency log
+        try {
+            const actor = ForumDB.getSession();
+            const committeesMap = { bilim: 'Bilim Komitesi', teknoloji: 'Teknoloji Komitesi', sanat: 'Sanat Komitesi', sosyal: 'Sosyal Sorumluluk', organizasyon: 'Organizasyon' };
+            const committeeLabel = committeesMap[newProject.category] || newProject.category || 'Komite';
+            ForumDB.logGovernanceActivity({
+                type: isAutoApproved ? 'proje_olusturma' : 'proje_oneri',
+                title: `"${newProject.title}" adlı proje ${committeeLabel} içinde ${isAutoApproved ? 'aktif edildi' : 'öneri olarak kaydedildi'}`,
+                description: actor ? `İşlem: ${actor.fullName}.` : ''
+            });
+        } catch (e) {}
 
         // Add Badge for first project (only if active)
         if (isAutoApproved) {
@@ -1731,6 +1822,15 @@ const ForumDB = {
             localStorage.setItem('forum_users', JSON.stringify(users));
         }
 
+        // Governance transparency log
+        try {
+            ForumDB.logGovernanceActivity({
+                type: 'fikir_proje_donusum',
+                title: `"${idea.title}" fikri projeye dönüştürüldü`,
+                description: `Oluşturulan proje ID: ${project.id}.`
+            });
+        } catch (e) {}
+
         return project;
     },
 
@@ -1767,6 +1867,66 @@ const ForumDB = {
         localStorage.setItem('forum_announcements', JSON.stringify(ann));
     },
 
+    // --- Yönetim Duyuruları ---
+    getGovernanceAnnouncements: () => {
+        try {
+            const list = JSON.parse(localStorage.getItem('forum_governance_announcements')) || [];
+            return Array.isArray(list) ? list : [];
+        } catch (e) {
+            localStorage.removeItem('forum_governance_announcements');
+            return [];
+        }
+    },
+    createGovernanceAnnouncement: ({ title, content, category }) => {
+        const session = ForumDB.getSession();
+        if (!session) return { ok: false, error: 'Giriş yapmalısın.' };
+        if (!ForumDB.isGovernanceMember(session) && session.role !== 'admin') {
+            return { ok: false, error: 'Bu işlem için yetkin yok.' };
+        }
+
+        const list = ForumDB.getGovernanceAnnouncements();
+        const item = {
+            id: Date.now(),
+            authorId: Number(session.id),
+            authorName: session.fullName,
+            title: (title || '').trim(),
+            content: (content || '').trim(),
+            category: (category || 'genel').trim(),
+            createdAt: new Date().toISOString()
+        };
+        if (!item.title || !item.content) {
+            return { ok: false, error: 'Başlık ve içerik zorunlu.' };
+        }
+        list.unshift(item);
+        localStorage.setItem('forum_governance_announcements', JSON.stringify(list));
+
+        // Basit bildirim: tüm kullanıcılara yönetim duyurusu
+        const users = ForumDB.getUsers();
+        const note = {
+            id: Date.now(),
+            type: 'governance_announcement',
+            message: `Yönetim duyurusu: ${item.title}`,
+            createdAt: new Date().toISOString(),
+            read: false
+        };
+        users.forEach(u => {
+            if (!u.notifications) u.notifications = [];
+            u.notifications.unshift({ ...note });
+        });
+        localStorage.setItem('forum_users', JSON.stringify(users));
+
+        // Governance transparency log
+        try {
+            ForumDB.logGovernanceActivity({
+                type: 'yonetim_duyuru',
+                title: `Yönetim duyurusu: ${item.title}`,
+                description: item.content.slice(0, 140)
+            });
+        } catch (e) {}
+
+        return { ok: true, announcement: item };
+    },
+
     // --- Stats & Featured (Point 11, 13, 14) ---
     getStats: () => {
         const users = ForumDB.getUsers();
@@ -1792,6 +1952,200 @@ const ForumDB = {
             projects: projects.filter(p => p.category === committeeId).length,
             events: events.filter(e => e.committee === committeeId).length
         };
+    },
+
+    // --- Yönetim Mesajları ---
+    getGovernanceMessages: () => {
+        try {
+            const list = JSON.parse(localStorage.getItem('forum_governance_messages')) || [];
+            return Array.isArray(list) ? list : [];
+        } catch (e) {
+            localStorage.removeItem('forum_governance_messages');
+            return [];
+        }
+    },
+    createGovernanceMessage: ({ fromUserId, type, subject, content }) => {
+        const users = ForumDB.getUsers();
+        const sender = users.find(u => u.id === fromUserId);
+        if (!sender) return { ok: false, error: 'Kullanıcı bulunamadı.' };
+
+        const list = ForumDB.getGovernanceMessages();
+        const msg = {
+            id: Date.now(),
+            fromUserId,
+            fromName: sender.fullName,
+            fromUsername: sender.username || '',
+            type: (type || 'diger').trim(),
+            subject: (subject || '').trim(),
+            content: (content || '').trim(),
+            status: 'open', // open | in_progress | resolved
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        if (!msg.subject || !msg.content) {
+            return { ok: false, error: 'Konu ve mesaj zorunlu.' };
+        }
+        list.unshift(msg);
+        localStorage.setItem('forum_governance_messages', JSON.stringify(list));
+
+        // Basit bildirim: yönetime yeni mesaj
+        const governors = users.filter(u => ForumDB.isGovernanceMember(u) || u.role === 'admin');
+        const note = {
+            id: Date.now(),
+            type: 'governance_message',
+            message: `${sender.fullName} yönetim kuruluna yeni bir mesaj gönderdi.`,
+            createdAt: new Date().toISOString(),
+            read: false
+        };
+        governors.forEach(u => {
+            if (!u.notifications) u.notifications = [];
+            u.notifications.unshift({ ...note });
+        });
+        localStorage.setItem('forum_users', JSON.stringify(users));
+
+        return { ok: true, message: msg };
+    },
+    updateGovernanceMessageStatus: (id, status) => {
+        const session = ForumDB.getSession();
+        if (!session || (!ForumDB.isGovernanceMember(session) && session.role !== 'admin')) {
+            return { ok: false, error: 'Bu işlem için yetkin yok.' };
+        }
+        const list = ForumDB.getGovernanceMessages();
+        const idx = list.findIndex(m => m.id === id);
+        if (idx === -1) return { ok: false, error: 'Mesaj bulunamadı.' };
+        list[idx].status = status;
+        list[idx].updatedAt = new Date().toISOString();
+        localStorage.setItem('forum_governance_messages', JSON.stringify(list));
+        return { ok: true, message: list[idx] };
+    },
+
+    // --- Yönetim Oylamaları / Anketleri ---
+    getGovernancePolls: () => {
+        try {
+            const raw = JSON.parse(localStorage.getItem('forum_governance_polls')) || [];
+            if (!Array.isArray(raw)) return [];
+            return raw.map(p => ({
+                id: Number(p.id) || Date.now(),
+                question: p.question || '',
+                options: Array.isArray(p.options) ? p.options.map((o, idx) => ({
+                    id: Number(o.id ?? idx + 1),
+                    text: (o.text || '').trim(),
+                    votes: Number(o.votes) || 0
+                })) : [],
+                createdBy: Number(p.createdBy) || 0,
+                createdByName: p.createdByName || '',
+                createdAt: p.createdAt || new Date().toISOString(),
+                closesAt: p.closesAt || null,
+                scope: p.scope || 'all', // all | members | governance
+                voters: Array.isArray(p.voters) ? p.voters : [] // { userId, optionId }
+            }));
+        } catch (e) {
+            localStorage.removeItem('forum_governance_polls');
+            return [];
+        }
+    },
+    createGovernancePoll: ({ question, options, scope, closesAt }) => {
+        const session = ForumDB.getSession();
+        if (!session) return { ok: false, error: 'Giriş yapmalısın.' };
+        if (!ForumDB.isGovernanceMember(session) && session.role !== 'admin') {
+            return { ok: false, error: 'Bu işlem için yetkin yok.' };
+        }
+        const q = (question || '').trim();
+        const opts = Array.isArray(options) ? options.map(o => (o || '').trim()).filter(Boolean) : [];
+        if (!q || opts.length < 2) {
+            return { ok: false, error: 'En az 2 seçenekli bir soru girmelisin.' };
+        }
+        const polls = ForumDB.getGovernancePolls();
+        const pollId = Date.now();
+        const poll = {
+            id: pollId,
+            question: q,
+            options: opts.map((text, idx) => ({ id: idx + 1, text, votes: 0 })),
+            createdBy: Number(session.id),
+            createdByName: session.fullName,
+            createdAt: new Date().toISOString(),
+            closesAt: closesAt || null,
+            scope: scope || 'all',
+            voters: []
+        };
+        polls.unshift(poll);
+        localStorage.setItem('forum_governance_polls', JSON.stringify(polls));
+        try {
+            ForumDB.logGovernanceActivity({
+                type: 'anket',
+                title: `Yönetim anketi: ${poll.question}`,
+                description: `Kapsam: ${poll.scope}. Seçenek sayısı: ${poll.options.length}.`
+            });
+        } catch (e) {}
+        return { ok: true, poll };
+    },
+    voteGovernancePoll: ({ pollId, optionId, userId }) => {
+        const polls = ForumDB.getGovernancePolls();
+        const idx = polls.findIndex(p => Number(p.id) === Number(pollId));
+        if (idx === -1) return { ok: false, error: 'Anket bulunamadı.' };
+        const poll = polls[idx];
+        const now = new Date();
+        if (poll.closesAt && new Date(poll.closesAt) < now) {
+            return { ok: false, error: 'Bu anket sona erdi.' };
+        }
+        const optIdx = poll.options.findIndex(o => Number(o.id) === Number(optionId));
+        if (optIdx === -1) return { ok: false, error: 'Seçenek bulunamadı.' };
+
+        if (!Array.isArray(poll.voters)) poll.voters = [];
+        // Kullanıcı daha önce oy vermiş mi?
+        const existing = poll.voters.find(v => Number(v.userId) === Number(userId));
+        if (existing) {
+            if (Number(existing.optionId) === Number(optionId)) {
+                return { ok: true, poll }; // aynı seçeneğe tekrar basma -> no-op
+            }
+            // Eski seçenekten bir oy eksilt
+            const prevIdx = poll.options.findIndex(o => Number(o.id) === Number(existing.optionId));
+            if (prevIdx !== -1 && poll.options[prevIdx].votes > 0) {
+                poll.options[prevIdx].votes -= 1;
+            }
+            existing.optionId = Number(optionId);
+        } else {
+            poll.voters.push({ userId: Number(userId), optionId: Number(optionId) });
+        }
+        // Yeni seçeneğe oy ekle
+        poll.options[optIdx].votes += 1;
+        polls[idx] = poll;
+        localStorage.setItem('forum_governance_polls', JSON.stringify(polls));
+        try {
+            ForumDB.logGovernanceActivity({
+                type: 'anket_oy',
+                title: `Ankete yeni oy: ${poll.question}`,
+                description: `Kullanıcı #${userId} oy kullandı.`
+            });
+        } catch (e) {}
+        return { ok: true, poll };
+    },
+
+    // --- Yönetim Şeffaflık / Faaliyet Logları ---
+    getGovernanceActivities: () => {
+        try {
+            const list = JSON.parse(localStorage.getItem('forum_governance_activities')) || [];
+            return Array.isArray(list) ? list : [];
+        } catch (e) {
+            localStorage.removeItem('forum_governance_activities');
+            return [];
+        }
+    },
+    logGovernanceActivity: ({ type, title, description }) => {
+        const session = ForumDB.getSession();
+        const list = ForumDB.getGovernanceActivities();
+        const item = {
+            id: Date.now(),
+            type: type || 'genel', // proje, başvuru, güncelleme vb.
+            title: (title || '').trim(),
+            description: (description || '').trim(),
+            createdAt: new Date().toISOString(),
+            actorId: session?.id || null,
+            actorName: session?.fullName || null
+        };
+        list.unshift(item);
+        localStorage.setItem('forum_governance_activities', JSON.stringify(list));
+        return item;
     },
     getFeaturedMember: () => {
         const users = ForumDB.getUsers();
