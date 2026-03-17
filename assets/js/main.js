@@ -102,7 +102,161 @@ const ForumUI = {
     }
 };
 
+// --- Theme Manager (light / dark / red) ---
+const ForumTheme = (() => {
+    const STORAGE_KEY = 'forum_theme';
+    const THEMES = ['light', 'dark', 'red'];
+
+    function getTheme() {
+        const t = (localStorage.getItem(STORAGE_KEY) || 'light').toString();
+        return THEMES.includes(t) ? t : 'light';
+    }
+
+    function setTheme(theme) {
+        const t = THEMES.includes(theme) ? theme : 'light';
+        localStorage.setItem(STORAGE_KEY, t);
+        applyTheme(t);
+        updateToggleButtons(t);
+    }
+
+    function cycleTheme() {
+        const current = getTheme();
+        const idx = THEMES.indexOf(current);
+        const next = THEMES[(idx + 1) % THEMES.length];
+        setTheme(next);
+    }
+
+    function injectStylesOnce() {
+        if (document.getElementById('forum-theme-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'forum-theme-styles';
+        style.textContent = `
+            :root { --accent: #E31E24; }
+            .text-accent { color: var(--accent) !important; }
+            .bg-accent { background-color: var(--accent) !important; }
+            .border-accent { border-color: var(--accent) !important; }
+
+            html[data-theme="dark"] { color-scheme: dark; }
+            html[data-theme="red"] { color-scheme: dark; }
+
+            html[data-theme="dark"] body,
+            html[data-theme="red"] body {
+                background-color: #0b1220 !important;
+            }
+
+            html[data-theme="dark"] .bg-white,
+            html[data-theme="red"] .bg-white {
+                background-color: #0f172a !important;
+            }
+            html[data-theme="red"] .bg-white { background-color: #12070a !important; }
+
+            html[data-theme="dark"] .bg-gray-50,
+            html[data-theme="red"] .bg-gray-50 { background-color: #0b1220 !important; }
+
+            html[data-theme="dark"] .text-gray-900,
+            html[data-theme="red"] .text-gray-900 { color: #f8fafc !important; }
+            html[data-theme="dark"] .text-gray-800,
+            html[data-theme="red"] .text-gray-800 { color: #e2e8f0 !important; }
+            html[data-theme="dark"] .text-gray-700,
+            html[data-theme="red"] .text-gray-700 { color: #cbd5e1 !important; }
+            html[data-theme="dark"] .text-gray-600,
+            html[data-theme="red"] .text-gray-600 { color: #94a3b8 !important; }
+            html[data-theme="dark"] .text-gray-500,
+            html[data-theme="red"] .text-gray-500 { color: #94a3b8 !important; }
+            html[data-theme="dark"] .text-gray-400,
+            html[data-theme="red"] .text-gray-400 { color: #64748b !important; }
+
+            html[data-theme="dark"] .border-gray-100,
+            html[data-theme="dark"] .border-gray-200,
+            html[data-theme="red"] .border-gray-100,
+            html[data-theme="red"] .border-gray-200 {
+                border-color: rgba(255,255,255,0.08) !important;
+            }
+            html[data-theme="dark"] .bg-black { background-color: #020617 !important; }
+            html[data-theme="red"] .bg-black { background-color: #080205 !important; }
+
+            html[data-theme="dark"] header.bg-white,
+            html[data-theme="red"] header.bg-white { background-color: rgba(2,6,23,0.88) !important; backdrop-filter: blur(14px); }
+
+            html[data-theme="dark"] .shadow-xl,
+            html[data-theme="dark"] .shadow-2xl,
+            html[data-theme="red"] .shadow-xl,
+            html[data-theme="red"] .shadow-2xl { box-shadow: 0 20px 60px rgba(0,0,0,0.45) !important; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function applyTheme(theme) {
+        injectStylesOnce();
+        const root = document.documentElement;
+        root.dataset.theme = theme;
+        if (theme === 'red') root.style.setProperty('--accent', '#ff2a2a');
+        else root.style.setProperty('--accent', '#E31E24');
+    }
+
+    function renderPill(el, theme) {
+        const options = [
+            { key: 'light', label: 'Açık', icon: 'sun' },
+            { key: 'dark', label: 'Koyu', icon: 'moon' },
+            { key: 'red', label: 'Kırmızı', icon: 'flame' }
+        ];
+        el.setAttribute('role', 'tablist');
+        el.setAttribute('aria-label', 'Tema seçimi');
+        el.innerHTML = `
+            <div class="inline-flex items-center p-1 rounded-2xl border border-gray-200 bg-white/80 backdrop-blur-md shadow-sm">
+                ${options.map(o => {
+                    const active = o.key === theme;
+                    return `
+                        <button type="button"
+                                data-theme-choice="${o.key}"
+                                role="tab"
+                                aria-selected="${active ? 'true' : 'false'}"
+                                class="${active ? 'bg-black text-white shadow' : 'text-gray-600 hover:bg-gray-100'} inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition">
+                            <i data-lucide="${o.icon}" class="w-4 h-4"></i>
+                            <span class="hidden lg:inline">${o.label}</span>
+                        </button>
+                    `;
+                }).join('')}
+            </div>
+        `;
+        el.querySelectorAll('[data-theme-choice]').forEach(btn => {
+            btn.addEventListener('click', () => setTheme(btn.getAttribute('data-theme-choice')));
+        });
+    }
+
+    function updateToggleButtons(theme) {
+        // Yeni premium pill
+        document.querySelectorAll('[data-theme-toggle="pill"]').forEach(el => renderPill(el, theme));
+
+        // Geriye uyumluluk: eski tek buton (varsa)
+        document.querySelectorAll('[data-theme-toggle]:not([data-theme-toggle="pill"])').forEach(btn => {
+            const label = theme === 'light' ? 'Açık' : (theme === 'dark' ? 'Koyu' : 'Kırmızı');
+            const icon = theme === 'light' ? 'sun' : (theme === 'dark' ? 'moon' : 'flame');
+            btn.setAttribute('aria-label', `Tema: ${label}`);
+            btn.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i><span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">${label}</span>`;
+            btn.onclick = cycleTheme;
+        });
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function init() {
+        const theme = getTheme();
+        applyTheme(theme);
+        updateToggleButtons(theme);
+        // Pill toggle'lar render içinde bağlanıyor; tek butonlar burada
+        document.querySelectorAll('[data-theme-toggle]:not([data-theme-toggle="pill"])').forEach(btn => {
+            btn.addEventListener('click', cycleTheme);
+        });
+    }
+
+    return { init, getTheme, setTheme, cycleTheme };
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Theme init
+    try { ForumTheme.init(); } catch (e) {}
+
     // Initialize Lucide Icons
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();

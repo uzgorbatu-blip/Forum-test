@@ -20,8 +20,8 @@
             <form id="login-form" class="mt-8 space-y-6">
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">E-posta</label>
-                        <input id="email" type="email" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="e-posta@örnek.com">
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Kullanıcı adı veya E-posta</label>
+                        <input id="identifier" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="Örn: batu123 veya e-posta@örnek.com">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Şifre</label>
@@ -36,12 +36,12 @@
     <script>
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const user = ForumDB.login(document.getElementById('email').value, document.getElementById('password').value);
+            const user = ForumDB.login(document.getElementById('identifier').value, document.getElementById('password').value);
             if (user) { 
                 ForumUI.notify('Giriş başarılı! Yönlendiriliyorsunuz...', 'success');
                 setTimeout(() => window.location.href = 'dashboard.html', 1500);
             } else { 
-                ForumUI.notify('E-posta veya şifre hatalı.', 'error');
+                ForumUI.notify('Bilgiler hatalı. (Kullanıcı adı / E-posta / Şifre)', 'error');
             }
         });
     </script>

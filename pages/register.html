@@ -31,12 +31,18 @@
                     </div>
                 </div>
                 <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Kullanıcı Adı</label>
+                    <input id="username" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="Örn: batu123">
+                    <p class="mt-1 text-[10px] text-gray-400 font-medium">En az 3 karakter, sadece harf ve sayı.</p>
+                </div>
+                <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">E-posta</label>
                     <input id="email" type="email" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="e-posta@örnek.com">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Şifre</label>
-                    <input id="password" type="password" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="••••••••">
+                    <input id="password" type="password" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm" placeholder="En az 8 karakter, büyük/küçük harf ve sayı">
+                    <p class="mt-1 text-[10px] text-gray-400 font-medium">En az 8 karakter, bir büyük harf, bir küçük harf ve bir sayı içermelidir.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">İlgi Alanları</label>
@@ -52,17 +58,44 @@
         </div>
     </div>
     <script>
+        function isStrongPassword(pw) {
+            if (!pw || pw.length < 8) return false;
+            if (!/[a-z]/.test(pw)) return false;
+            if (!/[A-Z]/.test(pw)) return false;
+            if (!/[0-9]/.test(pw)) return false;
+            return true;
+        }
+        function isValidUsername(u) {
+            if (!u) return false;
+            return /^[A-Za-z0-9]{3,}$/.test(u);
+        }
+
         document.getElementById('register-form').addEventListener('submit', (e) => {
             e.preventDefault();
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            if (!isValidUsername(username)) {
+                ForumUI.notify('Kullanıcı adı en az 3 karakter olmalı ve sadece harf/sayı içermelidir.', 'error');
+                return;
+            }
+            if (!isStrongPassword(password)) {
+                ForumUI.notify('Şifre en az 8 karakter, 1 büyük harf, 1 küçük harf ve 1 sayı içermelidir.', 'error');
+                return;
+            }
             const data = {
                 fullName: document.getElementById('fullName').value,
                 grade: document.getElementById('grade').value,
+                username,
                 email: document.getElementById('email').value,
-                password: document.getElementById('password').value,
+                password,
                 interests: document.getElementById('interests').value,
                 intro: document.getElementById('intro').value
             };
-            ForumDB.registerUser(data);
+            const result = ForumDB.registerUser(data);
+            if (result && result.error) {
+                ForumUI.notify(result.error, 'error');
+                return;
+            }
             ForumUI.notify('Kaydınız başarıyla oluşturuldu! Hoş geldiniz.', 'success');
             setTimeout(() => window.location.href = 'dashboard.html', 1500);
         });

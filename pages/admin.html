@@ -46,6 +46,9 @@
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
                 <h1 id="admin-tab-title" class="text-xl md:text-3xl font-black uppercase tracking-tight truncate">Yönetim Paneli</h1>
+                <div class="ml-auto flex items-center gap-2">
+                    <div data-theme-toggle="pill"></div>
+                </div>
             </header>
             <div class="p-4 sm:p-6 md:p-8">
             <!-- Applications -->
@@ -250,6 +253,7 @@
                                 <thead class="bg-gray-50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400">
                                     <tr>
                                         <th class="p-4">Üye</th>
+                                        <th class="p-4">Kullanıcı Adı</th>
                                         <th class="p-4">Rol</th>
                                         <th class="p-4">Komiteler</th>
                                         <th class="p-4">Tarih</th>
@@ -268,6 +272,12 @@
                                                         <p class="text-sm font-semibold">${u.fullName}</p>
                                                         <p class="text-[10px] font-normal text-gray-400">${u.email}</p>
                                                     </div>
+                                                </div>
+                                            </td>
+                                            <td class="p-4 text-xs">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <span class="font-mono text-[11px] text-gray-800">${u.username || '-'}</span>
+                                                    <button onclick="openUsernameModal(${u.id}, '${u.username || ''}')" class="text-[10px] font-black uppercase tracking-widest text-accent hover:underline">Düzenle</button>
                                                 </div>
                                             </td>
                                             <td class="p-4 text-xs font-black uppercase">${u.role}</td>
@@ -465,6 +475,46 @@
                             `;
                         }).join('');
             }
+        }
+
+        // Username düzenleme modal state
+        let usernameEditUserId = null;
+
+        function openUsernameModal(userId, currentUsername) {
+            usernameEditUserId = userId;
+            const modal = document.getElementById('username-modal');
+            const input = document.getElementById('username-modal-input');
+            const info = document.getElementById('username-modal-info');
+            input.value = currentUsername || '';
+            info.textContent = 'Kullanıcı adı en az 3 karakter olmalı ve sadece harf/sayı içermelidir.';
+            modal.classList.remove('hidden');
+        }
+
+        function closeUsernameModal() {
+            const modal = document.getElementById('username-modal');
+            modal.classList.add('hidden');
+            usernameEditUserId = null;
+        }
+
+        function submitUsernameModal() {
+            const session = ForumDB.getSession();
+            if (!session || session.role !== 'admin') return;
+            if (!usernameEditUserId) {
+                closeUsernameModal();
+                return;
+            }
+            const input = document.getElementById('username-modal-input');
+            const value = input.value.trim();
+            const result = ForumDB.updateUsername(usernameEditUserId, value);
+            if (!result.ok) {
+                alert(result.error || 'Kullanıcı adı güncellenemedi.');
+                return;
+            }
+            if (typeof ForumUI !== 'undefined') {
+                ForumUI.notify('Kullanıcı adı güncellendi.', 'success');
+            }
+            closeUsernameModal();
+            loadAdminData('users');
         }
 
         function updateAppStatus(id, status) { 
@@ -792,6 +842,35 @@
                 </button>
                 <button onclick="submitBanModalAdmin()" class="px-4 py-2 rounded-xl text-xs font-semibold tracking-wide bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 transition">
                     Ban Uygula
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Username Düzenleme Modalı -->
+    <div id="username-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="w-full max-w-md mx-4 rounded-2xl bg-gray-900 text-white shadow-2xl border border-blue-400/20">
+            <div class="px-6 pt-5 pb-4 border-b border-white/5 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-semibold tracking-wide uppercase text-blue-300">Kullanıcı Adı Düzenle</p>
+                    <p id="username-modal-info" class="text-[11px] text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="closeUsernameModal()" class="p-1.5 rounded-full hover:bg-white/5 text-gray-400 hover:text-white transition">
+                    ✕
+                </button>
+            </div>
+            <div class="px-6 py-4 space-y-4">
+                <div>
+                    <label for="username-modal-input" class="block text-xs font-medium text-gray-400 mb-1.5">Kullanıcı Adı</label>
+                    <input id="username-modal-input" class="w-full rounded-xl bg-gray-800/80 border border-gray-700 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/50 text-sm px-3 py-2 placeholder:text-gray-500 transition" placeholder="Örn: batu123">
+                    <p class="mt-1 text-[11px] text-gray-500">En az 3 karakter, sadece harf ve sayı. Tüm kullanıcılar için benzersiz olmalıdır.</p>
+                </div>
+            </div>
+            <div class="px-6 pb-5 pt-3 flex items-center justify-end gap-3 border-t border-white/5 bg-gray-900/80 rounded-b-2xl">
+                <button onclick="closeUsernameModal()" class="px-4 py-2 rounded-xl text-xs font-semibold tracking-wide bg-gray-800 text-gray-200 hover:bg-gray-700 transition">
+                    İptal
+                </button>
+                <button onclick="submitUsernameModal()" class="px-4 py-2 rounded-xl text-xs font-semibold tracking-wide bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/30 transition">
+                    Kaydet
                 </button>
             </div>
         </div>

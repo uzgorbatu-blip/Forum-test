@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
     <script>tailwind.config = { theme: { extend: { colors: { primary: '#000000', secondary: '#FFFFFF', accent: '#E31E24' }, fontFamily: { sans: ['Inter', 'sans-serif'] }, } } }</script>
 </head>
 <body class="antialiased bg-gray-50">
@@ -238,7 +239,7 @@
             const actionsDiv = document.getElementById('profile-actions');
             if (isOwnProfile) {
                 actionsDiv.innerHTML = `
-                    <button class="bg-black text-white px-8 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-accent transition shadow-lg hover:scale-105 active:scale-95 duration-300">Ayarlar</button>
+                    <button onclick="openSettingsModal()" class="bg-black text-white px-8 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-accent transition shadow-lg hover:scale-105 active:scale-95 duration-300">Ayarlar</button>
                     <button class="bg-white text-black border-2 border-black px-8 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black hover:text-white transition shadow-lg duration-300">Paylaş</button>
                 `;
             } else {
@@ -257,10 +258,9 @@
                     `;
                 }
                 actionsDiv.innerHTML = `
-                    <button onclick="toggleFollow(${targetUser.id}, ${isFollowing})" class="${isFollowing ? 'bg-gray-100 text-black border border-gray-200' : 'bg-accent text-white'} px-10 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition shadow-xl active:scale-95 duration-300">
+                    <button onclick="toggleFollow(${targetUser.id})" class="${isFollowing ? 'bg-gray-100 text-black border border-gray-200' : 'bg-accent text-white'} px-10 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition shadow-xl active:scale-95 duration-300">
                         ${isFollowing ? 'Takibi Bırak' : 'Takip Et'}
                     </button>
-                    <button class="bg-black text-white p-3 rounded-2xl hover:bg-accent transition shadow-xl duration-300"><i data-lucide="mail" class="w-5 h-5"></i></button>
                     ${adminControls}
                 `;
             }
@@ -282,23 +282,37 @@
 
             // Committees
             const committeeLabels = { bilim: 'Bilim ve Akademik', teknoloji: 'Teknoloji ve Girişim', sanat: 'Sanat ve Kültür', sosyal: 'Sosyal Sorumluluk', organizasyon: 'Organizasyon' };
+            const isOwnProfileForCommittees = isOwnProfile;
             document.getElementById('profile-committees').innerHTML = (targetUser.committees || []).map(c => `
-                <div class="flex items-center justify-between group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition duration-300">
-                    <span class="text-xs font-black uppercase tracking-widest text-gray-300 group-hover:text-accent transition">${committeeLabels[c] || c}</span>
-                    <i data-lucide="arrow-right" class="w-4 h-4 text-gray-600 group-hover:translate-x-1 transition"></i>
+                <div class="flex items-center justify-between gap-3 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition duration-300">
+                    <span class="text-xs font-black uppercase tracking-widest text-gray-300">${committeeLabels[c] || c}</span>
+                    ${isOwnProfileForCommittees ? `<button onclick="leaveCommittee('${c}')" class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition">Komiteden Ayrıl</button>` : ''}
                 </div>
-            `).join('');
+            `).join('') || '<p class="text-[11px] text-gray-400 italic">Herhangi bir komiteye üye değilsin.</p>';
 
             lucide.createIcons();
             if (typeof AOS !== 'undefined') AOS.refresh();
         }
 
-        function toggleFollow(id, isFollowing) {
+        function toggleFollow(targetId) {
+            const session = ForumDB.getSession();
+            if (!session) return;
+            const users = ForumDB.getUsers();
+            const current = users.find(u => Number(u.id) === Number(session.id)) || session;
+            const isFollowing = (current.following || []).some(id => Number(id) === Number(targetId));
             if (isFollowing) {
-                ForumDB.unfollowUser(session.id, id);
+                ForumDB.unfollowUser(current.id, targetId);
             } else {
-                ForumDB.followUser(session.id, id);
+                ForumDB.followUser(current.id, targetId);
             }
+            loadProfile();
+        }
+
+        function leaveCommittee(committeeId) {
+            const session = ForumDB.getSession();
+            if (!session) return;
+            if (!confirm('Bu komiteden ayrılmak istediğine emin misin?')) return;
+            ForumDB.leaveCommittee(session.id, committeeId);
             loadProfile();
         }
 
@@ -417,11 +431,169 @@
             backdrop.classList.add('hidden');
             document.body.style.overflow = '';
         }
+        // --- Ayarlar Modalı ---
+        function openSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (!modal) return;
+            const user = ForumDB.getSession();
+            if (!user) return;
+
+            // Hesap ayarları
+            document.getElementById('settings-username').value = user.username || '';
+            document.getElementById('settings-email').value = user.email || '';
+            document.getElementById('settings-bio').value = user.intro || '';
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+        }
+
+        function setButtonLoading(buttonId, isLoading) {
+            const btn = document.getElementById(buttonId);
+            if (!btn) return;
+            if (isLoading) {
+                btn.dataset.originalText = btn.dataset.originalText || btn.textContent;
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-wait');
+                btn.innerHTML = '<span class="inline-flex items-center gap-2 justify-center w-full"><span class="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></span><span>Kaydediliyor...</span></span>';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-wait');
+                if (btn.dataset.originalText) {
+                    btn.textContent = btn.dataset.originalText;
+                }
+            }
+        }
+
+        function saveAccountSettings(event) {
+            event.preventDefault();
+            const session = ForumDB.getSession();
+            if (!session) return;
+
+            setButtonLoading('settings-account-save', true);
+
+            const username = document.getElementById('settings-username').value.trim();
+            const email = document.getElementById('settings-email').value.trim();
+            const bio = document.getElementById('settings-bio').value.trim();
+            const currentPassword = document.getElementById('settings-current-password').value;
+            const newPassword = document.getElementById('settings-new-password').value;
+
+            // Username değişimi
+            if (username && username !== (session.username || '')) {
+                const res = ForumDB.updateUsername(session.id, username);
+                if (!res.ok) {
+                    if (typeof ForumUI !== 'undefined') {
+                        ForumUI.notify(res.error || 'Kullanıcı adı güncellenemedi.', 'error');
+                    }
+                    setButtonLoading('settings-account-save', false);
+                    return;
+                }
+            }
+
+            // Email güncelleme (sadece temel kontrol)
+            if (email && email !== session.email) {
+                const users = ForumDB.getUsers();
+                if (users.some(u => u.email === email && Number(u.id) !== Number(session.id))) {
+                    if (typeof ForumUI !== 'undefined') {
+                        ForumUI.notify('Bu e-posta başka bir hesapta kullanılıyor.', 'error');
+                    }
+                    setButtonLoading('settings-account-save', false);
+                    return;
+                }
+                ForumDB.updateUserProfile(session.id, { email });
+            }
+
+            // Şifre değiştirme (isteğe bağlı, basit doğrulama)
+            if (newPassword) {
+                if (!currentPassword || currentPassword !== session.password) {
+                    if (typeof ForumUI !== 'undefined') {
+                        ForumUI.notify('Mevcut şifre hatalı.', 'error');
+                    }
+                    setButtonLoading('settings-account-save', false);
+                    return;
+                }
+                if (newPassword.length < 8) {
+                    if (typeof ForumUI !== 'undefined') {
+                        ForumUI.notify('Yeni şifre en az 8 karakter olmalı.', 'error');
+                    }
+                    setButtonLoading('settings-account-save', false);
+                    return;
+                }
+                ForumDB.updateUserProfile(session.id, { password: newPassword });
+            }
+
+            // Biyografi
+            ForumDB.updateUserProfile(session.id, { intro: bio });
+
+            if (typeof ForumUI !== 'undefined') {
+                ForumUI.notify('Hesap ayarların güncellendi.', 'success');
+            }
+            document.getElementById('settings-current-password').value = '';
+            document.getElementById('settings-new-password').value = '';
+            loadProfile();
+            setButtonLoading('settings-account-save', false);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadProfile();
             AOS.init({ duration: 800, once: true });
         });
     </script>
+
+    <!-- Ayarlar Modalı -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="w-full max-w-4xl max-h-[90vh] overflow-hidden mx-4 rounded-3xl bg-gray-950 text-white shadow-2xl border border-white/10 flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+                <div>
+                    <p class="text-xs font-black uppercase tracking-[0.25em] text-gray-500">Profil Ayarları</p>
+                    <h2 class="text-xl font-black tracking-tight mt-1">Hesabını Kişiselleştir</h2>
+                </div>
+                <button onclick="closeSettingsModal()" class="p-2 rounded-full hover:bg-white/5 text-gray-400 hover:text-white transition">
+                    ✕
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-8 text-sm">
+                    <!-- 1. Hesap Ayarları -->
+                    <section id="settings-main" class="space-y-4">
+                        <h3 class="text-xs font-black uppercase tracking-[0.25em] text-gray-400">1. Hesap Ayarları</h3>
+                        <form onsubmit="saveAccountSettings(event)" class="space-y-4">
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-400 mb-1">Kullanıcı Adı</label>
+                                    <input id="settings-username" class="w-full rounded-xl bg-gray-900 border border-gray-700 px-3 py-2 text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30" placeholder="batu123">
+                                    <p class="mt-1 text-[10px] text-gray-500">En az 3 karakter, sadece harf/sayı. Giriş için de kullanılır.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-400 mb-1">E-posta</label>
+                                    <input id="settings-email" type="email" class="w-full rounded-xl bg-gray-900 border border-gray-700 px-3 py-2 text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30" placeholder="eposta@ornek.com">
+                                </div>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-400 mb-1">Mevcut Şifre</label>
+                                    <input id="settings-current-password" type="password" class="w-full rounded-xl bg-gray-900 border border-gray-700 px-3 py-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-400 mb-1">Yeni Şifre</label>
+                                    <input id="settings-new-password" type="password" class="w-full rounded-xl bg-gray-900 border border-gray-700 px-3 py-2 text-sm" placeholder="Boş bırakırsan değişmez">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-400 mb-1">Biyografi</label>
+                                <textarea id="settings-bio" rows="3" class="w-full rounded-xl bg-gray-900 border border-gray-700 px-3 py-2 text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30" placeholder="Kendini kısaca tanıt..."></textarea>
+                            </div>
+                            <div class="flex justify-end">
+                                <button id="settings-account-save" type="submit" class="px-4 py-2 rounded-xl bg-white text-black text-xs font-black uppercase tracking-widest hover:bg-accent hover:text-white transition shadow-lg">Hesap Ayarlarını Kaydet</button>
+                            </div>
+                        </form>
+                    </section>
+        </div>
+    </div>
+</body></html>
 
     <!-- Uyarı Modalı -->
     <div id="warn-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">

@@ -599,6 +599,7 @@ const ForumDB = {
             };
             return {
                 ...user,
+                username: (typeof user.username === 'string' && user.username.trim()) ? user.username.trim() : null,
                 role: user.role || 'member',
                 joinedAt: user.joinedAt || new Date().toISOString(),
                 xp: typeof user.xp === 'number' ? user.xp : (Number(user.xp) || 0),
@@ -611,6 +612,25 @@ const ForumDB = {
                 following: arr(user.following),
                 notifications: arr(user.notifications),
                 activities: arr(user.activities),
+                // Settings defaults
+                privacyProfile: user.privacyProfile || 'members', // public | members | followers
+                privacyHideFollowers: !!user.privacyHideFollowers,
+                privacyShowActivity: user.privacyShowActivity !== false,
+                privacyShowOnline: user.privacyShowOnline !== false,
+                privacyMessageFrom: user.privacyMessageFrom || 'everyone', // everyone | followers | none
+                notifProjectInvites: user.notifProjectInvites !== false,
+                notifCommitteeAnnouncements: user.notifCommitteeAnnouncements !== false,
+                notifFollowers: user.notifFollowers !== false,
+                notifMessages: user.notifMessages !== false,
+                notifEmail: user.notifEmail === true, // varsayılan kapalı
+                socialBlockedUsers: arr(user.socialBlockedUsers),
+                settingsTheme: user.settingsTheme || 'dark', // dark | light | red
+                settingsFontSize: user.settingsFontSize || 'md', // sm | md | lg
+                settingsHomeLayout: user.settingsHomeLayout || 'default',
+                settingsDashboardLayout: user.settingsDashboardLayout || 'default',
+                securityLoginHistory: arr(user.securityLoginHistory),
+                securityLastGlobalLogoutAt: user.securityLastGlobalLogoutAt || null,
+                accountStatus: user.accountStatus || 'active',
                 streakCurrent: typeof user.streakCurrent === 'number' ? user.streakCurrent : 0,
                 streakBest: typeof user.streakBest === 'number' ? user.streakBest : 0,
                 lastStreakDate: user.lastStreakDate || null,
@@ -658,9 +678,29 @@ const ForumDB = {
 
     registerUser: (userData) => {
         const users = ForumDB.getUsers();
+
+        const usernameRaw = (userData && typeof userData.username === 'string') ? userData.username.trim() : '';
+        const username = usernameRaw;
+        const usernameValid = /^[A-Za-z0-9]{3,}$/.test(username);
+        if (!usernameValid) {
+            return { error: 'Kullanıcı adı en az 3 karakter olmalı ve sadece harf/sayı içermelidir.' };
+        }
+
+        const usernameLower = username.toLowerCase();
+        const usernameTaken = users.some(u => (u.username || '').toString().toLowerCase() === usernameLower);
+        if (usernameTaken) {
+            return { error: 'Bu kullanıcı adı zaten alınmış.' };
+        }
+
+        // Basit benzersiz email kontrolü (spam kayıtları azaltmak için)
+        if (users.some(u => u.email === userData.email)) {
+            return { error: 'E-posta zaten kayıtlı.' };
+        }
+
         const newUser = { 
             id: Date.now(), 
             ...userData, 
+            username,
             role: 'member',
             xp: 0,
             level: 1,
@@ -668,12 +708,13 @@ const ForumDB = {
             committees: [], 
             projects: [],
             badges: ['new_member'],
-            followers: [], // Added for Follow System
-            following: [], // Added for Follow System
-            notifications: [], // Added for Notifications
-            activities: [], // Added for Activity Feed
-            joinedAt: new Date().toISOString() 
+            followers: [],
+            following: [],
+            notifications: [],
+            activities: [],
+            joinedAt: new Date().toISOString()
         };
+
         users.push(newUser);
         localStorage.setItem('forum_users', JSON.stringify(users));
         ForumDB.setSession(newUser);
@@ -811,27 +852,49 @@ const ForumDB = {
             .slice(0, 5);
     },
 
-    login: (email, password) => {
+    login: (identifier, password) => {
         const users = ForumDB.getUsers();
-        const user = users.find(u => u.email === email && u.password === password);
-        if (user) {
-            if (ForumDB.isUserBanned(user.id)) {
-                if (typeof ForumUI !== 'undefined') {
-                    ForumUI.notify('Hesabınız geçici olarak kısıtlanmıştır.', 'error');
-                }
-            return null;
-            }
-            ForumDB.setSession(user);
-            
-            // XP: Daily Login
-            const xpResult = ForumDB.addXP(user.id, 'daily_login');
-            if (xpResult && xpResult.earnedPoints && typeof ForumUI !== 'undefined') {
-                setTimeout(() => ForumUI.notifyXP(xpResult.earnedPoints, 'Günlük Giriş', xpResult.leveledUp, xpResult.newTitle), 1000);
-            }
-            
-            return user;
+        const raw = (identifier || '').toString().trim();
+        if (!raw) return null;
+        const normalized = raw.toLowerCase();
+
+        // 1) Username ile giriş (öncelikli)
+        let user = users.find(u => (u.username || '').toString().toLowerCase() === normalized);
+
+        // 2) Email ile giriş
+        if (!user) {
+            user = users.find(u => (u.email || '').toString().toLowerCase() === normalized);
         }
-        return null;
+
+        if (!user || user.password !== password) return null;
+
+        if (ForumDB.isUserBanned(user.id)) {
+            if (typeof ForumUI !== 'undefined') {
+                ForumUI.notify('Hesabınız geçici olarak kısıtlanmıştır.', 'error');
+            }
+            return null;
+        }
+
+        // Login history kaydı
+        const historyEntry = {
+            id: Date.now(),
+            at: new Date().toISOString(),
+            userAgent: (typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'),
+            platform: (typeof navigator !== 'undefined' ? navigator.platform : 'unknown')
+        };
+        if (!Array.isArray(user.securityLoginHistory)) user.securityLoginHistory = [];
+        user.securityLoginHistory.unshift(historyEntry);
+        localStorage.setItem('forum_users', JSON.stringify(users));
+
+        ForumDB.setSession(user);
+        
+        // XP: Daily Login
+        const xpResult = ForumDB.addXP(user.id, 'daily_login');
+        if (xpResult && xpResult.earnedPoints && typeof ForumUI !== 'undefined') {
+            setTimeout(() => ForumUI.notifyXP(xpResult.earnedPoints, 'Günlük Giriş', xpResult.leveledUp, xpResult.newTitle), 1000);
+        }
+        
+        return user;
     },
 
     updateUserProfile: (userId, updateData) => {
@@ -848,6 +911,36 @@ const ForumDB = {
             return true;
         }
         return false;
+    },
+
+    updateUsername: (userId, newUsername) => {
+        const users = ForumDB.getUsers();
+        const idx = users.findIndex(u => Number(u.id) === Number(userId));
+        if (idx === -1) return { ok: false, error: 'Kullanıcı bulunamadı.' };
+
+        const raw = (newUsername || '').toString().trim();
+        if (!raw) {
+            return { ok: false, error: 'Kullanıcı adı boş olamaz.' };
+        }
+        if (!/^[A-Za-z0-9]{3,}$/.test(raw)) {
+            return { ok: false, error: 'Kullanıcı adı en az 3 karakter olmalı ve sadece harf/sayı içermelidir.' };
+        }
+
+        const lower = raw.toLowerCase();
+        const taken = users.some(u => Number(u.id) !== Number(userId) && (u.username || '').toString().toLowerCase() === lower);
+        if (taken) {
+            return { ok: false, error: 'Bu kullanıcı adı başka bir kullanıcı tarafından kullanılıyor.' };
+        }
+
+        users[idx].username = raw;
+        localStorage.setItem('forum_users', JSON.stringify(users));
+
+        const session = ForumDB.getSession();
+        if (session && Number(session.id) === Number(userId)) {
+            ForumDB.setSession(users[idx]);
+        }
+
+        return { ok: true, user: users[idx] };
     },
 
     assignCommitteeHead: (userId, committeeId) => {
@@ -874,6 +967,25 @@ const ForumDB = {
             return true;
         }
         return false;
+    },
+
+    leaveCommittee: (userId, committeeId) => {
+        const users = ForumDB.getUsers();
+        const idx = users.findIndex(u => Number(u.id) === Number(userId));
+        if (idx === -1) return false;
+        const user = users[idx];
+        user.committees = (user.committees || []).filter(c => c !== committeeId);
+        if (user.leadOf === committeeId) {
+            user.leadOf = null;
+            user.role = user.committees.length > 0 ? 'committee_member' : 'member';
+        }
+        localStorage.setItem('forum_users', JSON.stringify(users));
+
+        const session = ForumDB.getSession();
+        if (session && Number(session.id) === Number(userId)) {
+            ForumDB.setSession(user);
+        }
+        return true;
     },
 
     // --- Applications ---
